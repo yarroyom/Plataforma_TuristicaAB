@@ -28,12 +28,12 @@ export default function EditarEmprendedor() {
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Editar Emprendedor</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md">
-        <input className="border p-2 rounded" placeholder="Nombre" value={perfil.nombre} onChange={(e) => setPerfil({ ...perfil, nombre: e.target.value })} />
-        <input className="border p-2 rounded" placeholder="Descripción" value={perfil.descripcion} onChange={(e) => setPerfil({ ...perfil, descripcion: e.target.value })} />
-        <input className="border p-2 rounded" placeholder="Teléfono" value={perfil.telefono} onChange={(e) => setPerfil({ ...perfil, telefono: e.target.value })} />
-        <input className="border p-2 rounded" placeholder="Dirección" value={perfil.direccion} onChange={(e) => setPerfil({ ...perfil, direccion: e.target.value })} />
-        <input className="border p-2 rounded" placeholder="URL Foto" value={perfil.foto} onChange={(e) => setPerfil({ ...perfil, foto: e.target.value })} />
-        <button className="bg-yellow-500 text-white px-4 py-2 rounded" type="submit">Actualizar Perfil</button>
+        <input placeholder="Nombre" value={perfil.nombre} onChange={(e) => setPerfil({ ...perfil, nombre: e.target.value })} className="border p-2 rounded" />
+        <input placeholder="Descripción" value={perfil.descripcion} onChange={(e) => setPerfil({ ...perfil, descripcion: e.target.value })} className="border p-2 rounded" />
+        <input placeholder="Teléfono" value={perfil.telefono} onChange={(e) => setPerfil({ ...perfil, telefono: e.target.value })} className="border p-2 rounded" />
+        <input placeholder="Dirección" value={perfil.direccion} onChange={(e) => setPerfil({ ...perfil, direccion: e.target.value })} className="border p-2 rounded" />
+        <input placeholder="URL Foto" value={perfil.foto} onChange={(e) => setPerfil({ ...perfil, foto: e.target.value })} className="border p-2 rounded" />
+        <button type="submit" className="bg-yellow-500 text-white px-4 py-2 rounded">Actualizar Perfil</button>
       </form>
     </div>
   );

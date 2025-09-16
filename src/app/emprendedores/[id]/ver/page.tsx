@@ -1,69 +1,70 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 
-interface Emprendedor {
-  id: number;
-  nombre: string;
-  descripcion?: string;
-  telefono?: string;
-  direccion?: string;
-  foto?: string;
-  usuario: { id: number; nombre: string; correo: string; rol: string };
-}
+export default function VerEmprendedor() {
+  const { id } = useParams();
+  const numericId = parseInt(id as string);
+  const router = useRouter();
+  const [perfil, setPerfil] = useState<any>(null);
+  const [usuarioLogueado, setUsuarioLogueado] = useState<{ id: number; rol: string } | null>(null);
 
-export default function Emprendedores() {
-  const [emprendedores, setEmprendedores] = useState<Emprendedor[]>([]);
-
-  // Simulación de usuario logueado
-  const usuarioLogueado = { id: 2, rol: "TURISTA" }; // Cambia a "EMPRENDEDOR" para probar
-
+  // Obtener usuario logueado desde backend (cookie HttpOnly)
   useEffect(() => {
-    fetch("/api/emprendedores")
+    fetch("/api/me")
       .then(res => res.json())
-      .then(setEmprendedores);
+      .then(data => {
+        if (data.error) {
+          router.push("/login"); // Redirigir si no hay token válido
+        } else {
+          setUsuarioLogueado({ id: data.id, rol: data.rol.toUpperCase() });
+        }
+      })
+      .catch(() => router.push("/login"));
   }, []);
+
+  // Traer perfil del emprendedor
+  useEffect(() => {
+    fetch(`/api/emprendedores/${numericId}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Perfil no encontrado");
+        return res.json();
+      })
+      .then(setPerfil)
+      .catch(err => console.error(err));
+  }, [numericId]);
+
+  if (!perfil) return <div>Cargando perfil...</div>;
+  if (!usuarioLogueado) return <div>Verificando usuario...</div>;
+
+  const esPropietario = usuarioLogueado.rol === "EMPRENDEDOR" && usuarioLogueado.id === perfil.usuario.id;
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Emprendedores</h1>
-      {usuarioLogueado.rol === "EMPRENDEDOR" && (
-        <Link
-          href="/emprendedores/nuevo"
-          className="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block"
-        >
-          Nuevo Perfil
-        </Link>
+      <h1 className="text-2xl font-bold mb-4">{perfil.nombre}</h1>
+      {perfil.foto && <img src={perfil.foto} alt={perfil.nombre} className="w-64 h-64 object-cover rounded mb-4" />}
+      <p>{perfil.descripcion}</p>
+      <p>Tel: {perfil.telefono}</p>
+      <p>Dirección: {perfil.direccion}</p>
+      <p>Correo: {perfil.usuario.correo}</p>
+
+      {esPropietario && (
+        <div className="flex gap-2 mt-4">
+          <button
+            className="bg-yellow-500 text-white px-4 py-2 rounded"
+            onClick={() => router.push(`/emprendedores/${perfil.id}/editar`)}
+          >
+            Editar
+          </button>
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded"
+            onClick={() => router.push(`/emprendedores/${perfil.id}/eliminar`)}
+          >
+            Eliminar
+          </button>
+        </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {emprendedores.map(e => (
-          <div key={e.id} className="border p-4 rounded shadow hover:shadow-lg transition">
-            <h2 className="font-semibold text-lg">{e.nombre}</h2>
-            {e.foto && <img src={e.foto} alt={e.nombre} className="w-full h-40 object-cover mt-2 mb-2 rounded" />}
-            <p>{e.descripcion}</p>
-            <p className="text-sm">Tel: {e.telefono}</p>
-            <p className="text-sm">Dirección: {e.direccion}</p>
-            <p className="text-sm">Usuario: {e.usuario.nombre} ({e.usuario.correo})</p>
-            {usuarioLogueado.rol === "EMPRENDEDOR" && usuarioLogueado.id === e.usuario.id && (
-              <div className="flex gap-2 mt-2">
-                <Link
-                  href={`/emprendedores/${e.id}/editar`}
-                  className="bg-yellow-500 text-white px-2 py-1 rounded"
-                >
-                  Editar
-                </Link>
-                <Link
-                  href={`/emprendedores/${e.id}/eliminar`}
-                  className="bg-red-500 text-white px-2 py-1 rounded"
-                >
-                  Eliminar
-                </Link>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
