@@ -28,9 +28,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/emprendedores/nuevo",
-    "/emprendedores/:path*/editar",
-    "/emprendedores/:path*/eliminar",
+   
     "/dashboard/:path*",
   ],
 };

@@ -12,6 +12,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
     }
 
+    // Log para depuración
+    console.log("Usuario encontrado:", usuario);
+
     const valido = await bcrypt.compare(password, usuario.password);
     if (!valido) {
       return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 });
@@ -23,6 +26,10 @@ export async function POST(req: Request) {
       process.env.JWT_SECRET!,
       { expiresIn: "1h" }
     );
+
+    // Log para depuración
+    console.log("Token generado:", token);
+
 
     const response = NextResponse.json({ message: "Login exitoso" });
     response.cookies.set("token", token, {

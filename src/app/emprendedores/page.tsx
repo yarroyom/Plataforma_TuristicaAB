@@ -20,30 +20,54 @@ export default function ListaEmprendedores() {
 
   // Obtener usuario logueado desde backend (cookie HttpOnly)
   useEffect(() => {
-    fetch("/api/me")
-      .then(res => res.json())
-      .then(data => {
+    const fetchUsuario = async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        const data = await res.json();
+
+        // Log para depuración
+        console.log("Respuesta /api/me:", data);
+
         if (data.error) {
+          console.log("Redirigiendo a login por error:", data.error);
           router.push("/login"); // Redirige si no hay token válido
         } else {
           setUsuarioLogueado({ id: data.id, rol: data.rol.toUpperCase() });
         }
-      })
-      .catch(() => router.push("/login"));
+      } catch (err) {
+        console.log("Error en fetchUsuario:", err);
+        router.push("/login");
+      }
+    };
+
+    fetchUsuario();
   }, []);
 
   // Traer lista de emprendedores
   useEffect(() => {
-    fetch("/api/emprendedores")
-      .then(res => res.json())
-      .then(setEmprendedores)
-      .catch(err => console.error(err));
+    const fetchEmprendedores = async () => {
+      try {
+        const res = await fetch("/api/emprendedores");
+        const data = await res.json();
+        setEmprendedores(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchEmprendedores();
   }, []);
 
   if (!usuarioLogueado) return <div>Verificando usuario...</div>;
 
   return (
     <div className="p-8">
+      <button
+        className="text-blue-600 underline mb-4"
+        onClick={() => router.push("/principal")}
+      >
+        ← Regresar
+      </button>
       <h1 className="text-2xl font-bold mb-4">Emprendedores</h1>
 
       {/* Nuevo Perfil solo para EMPRENDEDOR */}

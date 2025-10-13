@@ -1,175 +1,164 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import WithAuth from '@/components/WithAuth';
-
-// Definir interfaz para el perfil
-interface Perfil {
-  id?: string;
-  nombre: string;
-  correo: string;
-  rol: string;
-}
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function PerfilPage() {
-  const { user } = useAuth();
-  const [perfil, setPerfil] = useState<Perfil | null>(null);
-  const [editando, setEditando] = useState(false);
-  const [formData, setFormData] = useState<Perfil>({
-    nombre: '',
-    correo: '',
-    rol: ''
-  });
+  const router = useRouter();
+  const [usuario, setUsuario] = useState({ nombre: "", correo: "", foto: "" });
+  const [file, setFile] = useState<File | null>(null);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const cargarPerfil = async () => {
-      try {
-        const res = await fetch('/api/perfil', {
-          credentials: 'include'
-        });
-        
-        if (!res.ok) {
-          throw new Error('Error al cargar perfil');
-        }
-        
-        const data: Perfil = await res.json();
-        setPerfil(data);
-        setFormData(data);
-      } catch (error) {
-        console.error('Error cargando perfil:', error);
-      }
-    };
-
-    if (user) {
-      cargarPerfil();
-    }
-  }, [user]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await fetch('/api/perfil', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-        credentials: 'include'
+    fetch("/api/me", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.correo) setUsuario({ nombre: data.nombre || "", correo: data.correo, foto: data.foto || "" });
+        else router.push("/login");
       });
+  }, [router]);
 
-      if (res.ok) {
-        setEditando(false);
-        const updated: Perfil = await res.json();
-        setPerfil(updated);
-      }
-    } catch (error) {
-      console.error('Error actualizando perfil:', error);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
     }
   };
 
-  const handleEliminar = async () => {
-    if (confirm('¿Estás seguro de que quieres eliminar tu perfil?')) {
-      try {
-        const res = await fetch('/api/perfil', {
-          method: 'DELETE',
-          credentials: 'include'
-        });
+  const handleUpload = async () => {
+    if (!file) return usuario.foto;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "default");
+    const res = await fetch("https://api.cloudinary.com/v1_1/dcbeuxme4/image/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    return data.secure_url;
+  };
 
-        if (res.ok) {
-          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-          window.location.href = '/login';
-        }
-      } catch (error) {
-        console.error('Error eliminando perfil:', error);
-      }
+  const handleFotoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const fotoUrl = await handleUpload();
+    const res = await fetch("/api/perfil", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ foto: fotoUrl }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      // Vuelve a cargar los datos del usuario desde el backend
+      fetch("/api/me", { credentials: "include" })
+        .then(res => res.json())
+        .then(data => {
+          setUsuario({ nombre: data.nombre || "", correo: data.correo, foto: data.foto || "" });
+        });
+      alert("Foto actualizada correctamente");
+    } else {
+      alert(data.error || "Error al actualizar la foto");
+    }
+    setLoading(false);
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    await fetch("/api/perfil", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ password }),
+    });
+    setPassword("");
+    setLoading(false);
+    alert("Contraseña actualizada");
+  };
+
+  const handleEliminarFoto = async () => {
+    setLoading(true);
+    const res = await fetch("/api/perfil", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ foto: "" }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setUsuario({ ...usuario, foto: "" });
+      alert("Foto eliminada correctamente");
+    } else {
+      alert(data.error || "Error al eliminar la foto");
+    }
+    setLoading(false);
+  };
+
+  const handleEliminarUsuario = async () => {
+    if (!confirm("¿Seguro que quieres eliminar tu usuario? Esta acción no se puede deshacer.")) return;
+    const res = await fetch("/api/perfil", {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (res.ok) {
+      alert("Usuario eliminado correctamente");
+      router.push("/login");
+    } else {
+      const data = await res.json();
+      alert(data.error || "Error al eliminar usuario");
     }
   };
 
   return (
-    <WithAuth>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Mi Perfil</h1>
-        
-        {perfil && (
-          <div className="bg-white shadow-lg rounded-lg p-6">
-            {editando ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium">Nombre</label>
-                  <input
-                    type="text"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium">Email</label>
-                  <input
-                    type="email"
-                    value={formData.correo}
-                    onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
-                    disabled={user?.rol !== 'emprendedor'} // Solo emprendedores pueden editar email
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                  >
-                    Guardar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditando(false)}
-                    className="bg-gray-500 text-white px-4 py-2 rounded-lg"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <p><strong>Nombre:</strong> {perfil.nombre}</p>
-                  <p><strong>Email:</strong> {perfil.correo}</p>
-                  <p><strong>Rol:</strong> {perfil.rol}</p>
-                </div>
-
-                <div className="mt-6 flex gap-4">
-                  {user?.rol === 'emprendedor' && (
-                    <>
-                      <button
-                        onClick={() => setEditando(true)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg"
-                      >
-                        Editar Perfil
-                      </button>
-                      <button
-                        onClick={handleEliminar}
-                        className="bg-red-600 text-white px-4 py-2 rounded-lg"
-                      >
-                        Eliminar Perfil
-                      </button>
-                    </>
-                  )}
-                  
-                  {user?.rol === 'turista' && (
-                    <button
-                      onClick={() => alert('Modo de visualización - Solo turistas pueden ver')}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                    >
-                      Ver Detalles
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
+    <div className="p-8 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Mi Cuenta</h1>
+      <div className="flex flex-col items-center mb-6">
+        {usuario.foto ? (
+          <>
+            <img src={usuario.foto} alt="Foto de perfil" className="w-32 h-32 object-cover rounded-full mb-2" />
+            <button
+              className="bg-red-600 text-white px-3 py-1 rounded mb-2"
+              onClick={handleEliminarFoto}
+              disabled={loading}
+            >
+              Eliminar foto
+            </button>
+          </>
+        ) : (
+          <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center mb-2 text-gray-500">
+            Sin foto
           </div>
         )}
+        <div className="font-bold">{usuario.nombre}</div>
+        <div className="text-gray-600">{usuario.correo}</div>
       </div>
-    </WithAuth>
+      <form onSubmit={handleFotoSubmit} className="mb-6 flex flex-col gap-2">
+        <label className="font-semibold">Cambiar foto de perfil:</label>
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={loading}>
+          {loading ? "Guardando..." : "Actualizar foto"}
+        </button>
+      </form>
+      <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-2">
+        <label className="font-semibold">Cambiar contraseña:</label>
+        <input
+          type="password"
+          placeholder="Nueva contraseña"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          className="border p-2 rounded"
+        />
+        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded" disabled={loading}>
+          {loading ? "Guardando..." : "Actualizar contraseña"}
+        </button>
+      </form>
+      <button
+        className="bg-red-600 text-white px-4 py-2 rounded mt-4"
+        onClick={handleEliminarUsuario}
+      >
+        Eliminar usuario
+      </button>
+    </div>
   );
 }

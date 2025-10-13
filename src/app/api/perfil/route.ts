@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
@@ -30,66 +30,56 @@ export async function GET(req: Request) {
   }
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
+  let token = req.cookies.get("token")?.value;
+  if (!token) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.replace("Bearer ", "");
+    }
+  }
+  if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
   try {
-    const token = req.headers.get('cookie')?.split('; ')
-      .find(row => row.startsWith('token='))?.split('=')[1];
+    const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const body = await req.json();
+    const data: any = {};
 
-    if (!token) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    // Permite eliminar la foto si el valor es ""
+    if ("foto" in body) data.foto = body.foto;
+
+    if (body.password) {
+      // ...existing code para cambiar contraseña...
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    const data = await req.json();
-
-    // ✅ VERIFICACIÓN DE ROL - SOLO EMPRENDEDORES PUEDEN EDITAR
-    if (decoded.rol !== 'emprendedor') {
-      return NextResponse.json({ 
-        error: "No tienes permisos para editar. Solo los emprendedores pueden modificar su perfil." 
-      }, { status: 403 });
-    }
-
-    const perfilActualizado = await prisma.usuario.update({
-      where: { id: decoded.id },
-      data: data,
-      select: {
-        id: true,
-        correo: true,
-        nombre: true,
-        rol: true,
-      }
+    await prisma.usuario.update({
+      where: { id: payload.id },
+      data,
     });
 
-    return NextResponse.json(perfilActualizado);
-  } catch (error) {
-    return NextResponse.json({ error: "Error actualizando perfil" }, { status: 500 });
+    return NextResponse.json({ message: "Perfil actualizado" });
+  } catch (err) {
+    return NextResponse.json({ error: "Error al actualizar perfil" }, { status: 500 });
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
+  let token = req.cookies.get("token")?.value;
+  if (!token) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.replace("Bearer ", "");
+    }
+  }
+  if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
   try {
-    const token = req.headers.get('cookie')?.split('; ')
-      .find(row => row.startsWith('token='))?.split('=')[1];
-
-    if (!token) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-
-    // ✅ VERIFICACIÓN DE ROL - SOLO EMPRENDEDORES PUEDEN ELIMINAR
-    if (decoded.rol !== 'emprendedor') {
-      return NextResponse.json({ 
-        error: "No tienes permisos para eliminar. Solo los emprendedores pueden eliminar su perfil." 
-      }, { status: 403 });
-    }
-
+    const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
     await prisma.usuario.delete({
-      where: { id: decoded.id }
+      where: { id: payload.id },
     });
-
-    return NextResponse.json({ message: "Perfil eliminado correctamente" });
-  } catch (error) {
-    return NextResponse.json({ error: "Error eliminando perfil" }, { status: 500 });
+    return NextResponse.json({ message: "Usuario eliminado" });
+  } catch (err) {
+    return NextResponse.json({ error: "Error al eliminar usuario" }, { status: 500 });
   }
 }

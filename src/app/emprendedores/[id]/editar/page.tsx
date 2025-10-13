@@ -9,9 +9,17 @@ export default function EditarEmprendedor() {
   const [perfil, setPerfil] = useState<any>({ nombre: "", descripcion: "", telefono: "", direccion: "", foto: "" });
 
   useEffect(() => {
-    fetch(`/api/emprendedores/${id}`)
+    fetch(`/api/emprendedores/${id}`, { credentials: "include" })
       .then(res => res.json())
-      .then(setPerfil);
+      .then(data => {
+        console.log("Perfil recibido:", data);
+        if (data.error) {
+          // Si el backend responde con error, redirige al login
+          router.push("/login");
+        } else {
+          setPerfil(data);
+        }
+      });
   }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,6 +27,7 @@ export default function EditarEmprendedor() {
     await fetch(`/api/emprendedores/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      credentials: "include", // Importante para enviar la cookie
       body: JSON.stringify(perfil),
     });
     router.push("/emprendedores");

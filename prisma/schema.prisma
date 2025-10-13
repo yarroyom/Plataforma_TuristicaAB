@@ -26,6 +26,7 @@ generator client {
 enum Rol {
   TURISTA
   EMPRENDEDOR
+  ADMIN
 }
 
 model Usuario {
@@ -33,15 +34,18 @@ model Usuario {
   nombre   String
   correo   String   @unique
   password String
+  foto     String?  // <-- agrega este campo si no existe
   creadoEn DateTime @default(now())
   rol      Rol      @default(TURISTA)
 
-  emprendedorPerfil EmprendedorPerfil? @relation
+  emprendedorPerfiles EmprendedorPerfil[] // Relación uno-a-muchos
+  reseñas             Reseña[]           @relation("UsuarioReseñas")
+  favoritos           Favorito[]         // <-- relación inversa agregada
 }
 
 model EmprendedorPerfil {
   id          Int      @id @default(autoincrement())
-  usuarioId   Int      @unique
+  usuarioId   Int      
   nombre      String
   descripcion String?
   telefono    String?
@@ -50,4 +54,47 @@ model EmprendedorPerfil {
   creadoEn    DateTime @default(now())
 
   usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+model LugarTuristico {
+  id           Int       @id @default(autoincrement())
+  nombre       String
+  descripcion  String?
+  imagen_url   String?   // Foto principal (Cloudinary)
+  latitud      Float?    // Para mapa
+  longitud     Float?    // Para mapa
+  creadoEn     DateTime  @default(now())
+
+  reseñas      Reseña[]
+  favoritos    Favorito[] // <-- relación inversa agregada
+}
+
+model Reseña {
+  id         Int           @id @default(autoincrement())
+  lugarId    Int
+  usuarioId  Int
+  comentario String
+  imagen     String?       // URL Cloudinary
+  creadoEn   DateTime      @default(now())
+
+  lugar      LugarTuristico @relation(fields: [lugarId], references: [id])
+  usuario    Usuario        @relation("UsuarioReseñas", fields: [usuarioId], references: [id])
+}
+
+model Favorito {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  lugarId   Int
+  creadoEn  DateTime @default(now())
+
+  usuario   Usuario        @relation(fields: [usuarioId], references: [id])
+  lugar     LugarTuristico @relation(fields: [lugarId], references: [id])
+}
+
+model Notificacion {
+  id        Int      @id @default(autoincrement())
+  mensaje   String
+  tipo      String   // Ejemplo: "negocio", "evento"
+  fecha     DateTime @default(now())
+  activo    Boolean  @default(true)
 }

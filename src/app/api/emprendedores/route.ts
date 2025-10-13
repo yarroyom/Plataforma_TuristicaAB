@@ -1,19 +1,84 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 
 export async function GET() {
   const emprendedores = await prisma.emprendedorPerfil.findMany({
-    include: { usuario: true }
+    include: { usuario: true },
   });
   return NextResponse.json(emprendedores);
 }
 
-export async function POST(req: Request) {
-  const { usuarioId, nombre, descripcion, telefono, direccion, foto } = await req.json();
+export async function POST(req: NextRequest) {
+  try {
+    // Obtener token desde cookie HttpOnly
+    const token = req.cookies.get("token")?.value;
+    if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const perfil = await prisma.emprendedorPerfil.create({
-    data: { usuarioId, nombre, descripcion, telefono, direccion, foto }
-  });
+    // Verificar token
+    const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const body = await req.json();
+    const { nombre, descripcion, telefono, direccion, foto } = body;
 
-  return NextResponse.json(perfil);
+    // Obtén el correo del usuario logueado
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: payload.id },
+      select: { correo: true },
+    });
+
+    const perfil = await prisma.emprendedorPerfil.create({
+      data: {
+        usuarioId: payload.id,
+        nombre,
+        descripcion,
+        telefono,
+        direccion,
+        foto,
+      },
+    });
+
+    // Crear notificación de nuevo negocio
+    await prisma.notificacion.create({
+      data: {
+        mensaje: `El emprendedor ${perfil.nombre} ha creado un nuevo negocio.`,
+        tipo: "negocio",
+      },
+    });
+
+    // Obtener el correo del administrador
+    const admin = await prisma.usuario.findFirst({
+      where: { rol: "ADMIN" },
+      select: { correo: true },
+    });
+
+    // Enviar correo solo a la administradora
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    try {
+      const info = await transporter.sendMail({
+        from: `"Agua Blanca" <${process.env.SMTP_USER}>`,
+        to: "ferarroyo0102@gmail.com", // solo a la administradora
+        subject: "Nuevo negocio en Agua Blanca",
+        text: `El emprendedor ${perfil.nombre} ha creado un nuevo negocio en Agua Blanca.`,
+      });
+      console.log("Correo enviado:", info);
+    } catch (error) {
+      console.error("Error al enviar correo:", error);
+    }
+
+    return NextResponse.json({ perfil }); // <-- Faltaba este return
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Error creando perfil" }, { status: 500 });
+  }
 }
+
+
