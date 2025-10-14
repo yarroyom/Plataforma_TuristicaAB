@@ -1,4 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+// Elimina esta línea si ya existe una declaración de PrismaClient en el mismo ámbito
+// const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();

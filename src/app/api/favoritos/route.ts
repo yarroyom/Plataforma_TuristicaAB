@@ -32,6 +32,25 @@ export async function POST(req: NextRequest) {
   await prisma.favorito.create({
     data: { usuarioId: payload.id, lugarId },
   });
+  const indicador = await prisma.indicador.findFirst({
+    where: { nombre: "Cantidad de lugares agregados a favoritos" }
+  });
+  if (indicador) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const ultimo = await prisma.valorIndicador.findFirst({
+      where: { indicadorId: indicador.id, fecha: { gte: hoy } },
+      orderBy: { fecha: "desc" },
+    });
+    const nuevoValor = ultimo ? ultimo.valorActual + 1 : 1;
+    await prisma.valorIndicador.create({
+      data: {
+        indicadorId: indicador.id,
+        valorActual: nuevoValor,
+        fecha: new Date(),
+      },
+    });
+  }
   return NextResponse.json({ message: "Agregado a favoritos" });
 }
 

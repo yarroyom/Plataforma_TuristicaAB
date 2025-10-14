@@ -132,6 +132,14 @@ export default function Principal() {
             >
               Dejar Comentario
             </li>
+            {usuarioLogueado.rol === "ADMIN" && (
+              <li
+                onClick={() => router.push("/estadistica")}
+                className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+              >
+                Estadística
+              </li>
+            )}
           </ul>
         </nav>
       )}

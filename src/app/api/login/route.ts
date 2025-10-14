@@ -39,6 +39,33 @@ export async function POST(req: Request) {
       path: "/"
     });
 
+    // Registrar el valor del indicador "Número de clics por página"
+    const indicador = await prisma.indicador.findFirst({
+      where: { nombre: "Número de clics por página" }
+    });
+    if (indicador) {
+      // Busca el último valor registrado para hoy
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const ultimo = await prisma.valorIndicador.findFirst({
+        where: {
+          indicadorId: indicador.id,
+          fecha: {
+            gte: hoy,
+          },
+        },
+        orderBy: { fecha: "desc" },
+      });
+      const nuevoValor = ultimo ? ultimo.valorActual + 1 : 1;
+      await prisma.valorIndicador.create({
+        data: {
+          indicadorId: indicador.id,
+          valorActual: nuevoValor,
+          fecha: new Date(),
+        },
+      });
+    }
+
     return response;
   } catch (error) {
     return NextResponse.json({ error: "Error en el login" }, { status: 500 });

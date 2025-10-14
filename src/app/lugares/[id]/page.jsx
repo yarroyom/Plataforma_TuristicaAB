@@ -15,6 +15,8 @@ export default function LugarDetalle() {
   const [editResenaId, setEditResenaId] = useState(null);
   const [editResenaTexto, setEditResenaTexto] = useState("");
   const [esFavorito, setEsFavorito] = useState(false);
+  const [calificacionUsuario, setCalificacionUsuario] = useState(0);
+  const [loadingCalificacion, setLoadingCalificacion] = useState(false);
 
   // Obtener usuario logueado real
   useEffect(() => {
@@ -34,10 +36,10 @@ export default function LugarDetalle() {
       setLugar(null);
       return;
     }
-    // Obtener el lugar real desde el backend
     fetch(`/api/lugares/${id}`)
       .then(res => res.json())
       .then(data => {
+        console.log("Lugar recibido:", data); // <-- log para depuración
         setLugar(data);
         setDescripcionEdit(data.descripcion || "");
       });
@@ -53,7 +55,17 @@ export default function LugarDetalle() {
       .then(data => {
         setEsFavorito(data.some(l => l.id === Number(id)));
       });
-  }, [id]);
+    // Obtener la calificación del usuario logueado para este lugar
+    fetch(`/api/resenas?lugarId=${id}&usuarioId=${usuarioLogueado.id}`, { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0 && typeof data[0].calificacion === "number") {
+          setCalificacionUsuario(data[0].calificacion);
+        } else {
+          setCalificacionUsuario(0);
+        }
+      });
+  }, [id, usuarioLogueado.id]);
 
   const handleGuardar = async () => {
     try {
@@ -163,6 +175,23 @@ export default function LugarDetalle() {
     }
   };
 
+  const handleCalificar = async (valor) => {
+    setLoadingCalificacion(true);
+    setCalificacionUsuario(valor);
+    await fetch("/api/lugares/calificar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        lugarId: Number(id),
+        calificacion: valor,
+        usuarioId: usuarioLogueado.id, // <-- envía el id del usuario logueado
+      }),
+    });
+    setLoadingCalificacion(false);
+    alert(`Calificaste con ${valor} estrella(s)`);
+  };
+
   if (!lugar) return <p className="p-4">Lugar no encontrado...</p>;
 
   return (
@@ -186,6 +215,27 @@ export default function LugarDetalle() {
           )}
           <div className="p-6">
             <h1 className="text-3xl font-bold mb-2 text-blue-700">{lugar.nombre}</h1>
+            {/* Promedio de calificaciones */}
+            <div className="mb-2">
+              <span className="font-semibold">Promedio de calificación: </span>
+              {lugar.numeroCalificaciones > 0
+                ? (lugar.calificacionTotal / lugar.numeroCalificaciones).toFixed(2)
+                : "Sin calificaciones"}
+            </div>
+            {/* Sección de calificación de estrellas */}
+            <div className="mb-4">
+              <h3 className="font-semibold mb-2">Califica este lugar:</h3>
+              <div className="flex gap-1">
+                {[1,2,3,4,5].map(valor => (
+                  <span
+                    key={valor}
+                    className={`cursor-pointer text-3xl ${calificacionUsuario >= valor ? "text-yellow-400" : "text-gray-300"}`}
+                    onClick={() => handleCalificar(valor)}
+                  >★</span>
+                ))}
+              </div>
+              {loadingCalificacion && <div className="text-blue-600">Guardando calificación...</div>}
+            </div>
             <h2 className="text-xl font-semibold mb-2">Historia</h2>
             {usuarioLogueado.rol === "ADMIN" ? (
               <>

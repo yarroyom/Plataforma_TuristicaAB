@@ -64,6 +64,8 @@ model LugarTuristico {
   latitud      Float?    // Para mapa
   longitud     Float?    // Para mapa
   creadoEn     DateTime  @default(now())
+  calificacionTotal Float @default(0) // <-- nuevo campo
+  numeroCalificaciones Int @default(0) // <-- nuevo campo
 
   reseñas      Reseña[]
   favoritos    Favorito[] // <-- relación inversa agregada
@@ -74,6 +76,7 @@ model Reseña {
   lugarId    Int
   usuarioId  Int
   comentario String
+  calificacion Int?        // <-- este campo debe existir
   imagen     String?       // URL Cloudinary
   creadoEn   DateTime      @default(now())
 
@@ -98,3 +101,103 @@ model Notificacion {
   fecha     DateTime @default(now())
   activo    Boolean  @default(true)
 }
+
+model Indicador {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  categoria   String   // Ejemplo: "Dependiente", "Independiente 1", "Independiente 2"
+  dimension   String   // <-- nuevo campo para la dimensión
+  meta        Float
+  unidad      String?  // Ejemplo: "personas", "interacciones", "puntos"
+  creadoEn    DateTime @default(now())
+  valores     ValorIndicador[]
+}
+
+model ValorIndicador {
+  id            Int      @id @default(autoincrement())
+  indicadorId   Int
+  valorActual   Float
+  fecha         DateTime
+  // Puedes agregar campos como fuente, observaciones, etc.
+  indicador     Indicador @relation(fields: [indicadorId], references: [id])
+}
+
+// Ejemplo de registros para Indicador (agrega estos en Prisma Studio o con un script):
+
+// Variable independiente: Plataforma Web
+// Dimensión: Usabilidad
+// Indicador: "Número de clics por página"
+// categoria: "Usabilidad"
+// meta: (define tu meta)
+// unidad: "clics"
+
+// Indicador: "Tiempo promedio de permanencia en el sitio"
+// categoria: "Usabilidad"
+// meta: (define tu meta)
+// unidad: "minutos"
+
+// Indicador: "Porcentaje de usuarios que completan tareas"
+// categoria: "Usabilidad"
+// meta: (define tu meta)
+// unidad: "%"
+
+// Dimensión: Accesibilidad
+// Indicador: "Número de accesos desde distintas fuentes"
+// categoria: "Accesibilidad"
+// meta: (define tu meta)
+// unidad: "accesos"
+
+// Dimensión: Actualización de contenido
+// Indicador: "Número de actualizaciones realizadas"
+// categoria: "Actualización de contenido"
+// meta: (define tu meta)
+// unidad: "actualizaciones"
+
+// Indicador: "Contenido agregado en el periodo"
+// categoria: "Actualización de contenido"
+// meta: (define tu meta)
+// unidad: "elementos"
+
+// Variable dependiente 1: Promoción Turística
+// Dimensión: Opinión sobre atractivos
+// Indicador: "Promedio de calificaciones a lugares turísticos"
+// categoria: "Promoción Turística"
+// meta: (define tu meta)
+// unidad: "calificación"
+
+// Dimensión: Intención o deseo de visitar
+// Indicador: "Número de veces que se usa 'Cómo llegar'"
+// categoria: "Promoción Turística"
+// meta: (define tu meta)
+// unidad: "usos"
+
+// Dimensión: Intención o deseo de recomendar
+// Indicador: "Número de veces que se comparte un lugar/evento"
+// categoria: "Promoción Turística"
+// meta: (define tu meta)
+// unidad: "compartidos"
+
+// Dimensión: Interacción con la plataforma
+// Indicador: "Cantidad de lugares agregados a favoritos"
+// categoria: "Promoción Turística"
+// meta: (define tu meta)
+// unidad: "favoritos"
+
+// Variable dependiente 2: Promoción Cultural
+// Dimensión: Opinión sobre actividades culturales
+// Indicador: "Promedio de calificaciones a actividades culturales"
+// categoria: "Promoción Cultural"
+// meta: (define tu meta)
+// unidad: "calificación"
+
+// Dimensión: Intención de recomendar
+// Indicador: "Número de veces que se comparten actividades culturales"
+// categoria: "Promoción Cultural"
+// meta: (define tu meta)
+// unidad: "compartidos"
+
+// Dimensión: Participación digital
+// Indicador: "Cantidad de comentarios sobre eventos culturales"
+// categoria: "Promoción Cultural"
+// meta: (define tu meta)
+// unidad: "comentarios"
