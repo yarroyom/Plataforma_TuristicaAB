@@ -126,8 +126,11 @@ export default function Principal() {
             >
               Notificaciones
             </li>
-            <li className="hover:bg-gray-100 p-2 rounded cursor-pointer">
-              Reseñas
+            <li
+              onClick={() => router.push("/comentarios/nuevo")}
+              className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+            >
+              Dejar Comentario
             </li>
           </ul>
         </nav>

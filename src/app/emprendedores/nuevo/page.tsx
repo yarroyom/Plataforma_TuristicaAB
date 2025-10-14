@@ -29,9 +29,12 @@ export default function NuevoEmprendedor() {
         const data = await res.json();
 
         if (data.error) {
-          router.push("/login"); // Si no hay token válido
-        } else if (data.rol.toUpperCase() !== "EMPRENDEDOR") {
-          router.push("/acceso-denegado"); // Solo emprendedores
+          router.push("/login");
+        } else if (
+          data.rol.toUpperCase() !== "EMPRENDEDOR" &&
+          data.rol.toUpperCase() !== "ADMIN" // <-- permite acceso a ADMIN
+        ) {
+          router.push("/acceso-denegado");
         } else {
           setUsuarioLogueado({ id: data.id, rol: data.rol.toUpperCase(), correo: data.correo });
         }

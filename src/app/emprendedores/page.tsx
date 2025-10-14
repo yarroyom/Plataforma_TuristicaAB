@@ -82,7 +82,9 @@ export default function ListaEmprendedores() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {emprendedores.map(e => {
-          const esPropietario = usuarioLogueado.rol === "EMPRENDEDOR" && usuarioLogueado.id === e.usuario.id;
+          const esPropietario =
+            usuarioLogueado.rol === "EMPRENDEDOR" && usuarioLogueado.id === e.usuario.id;
+          const esAdmin = usuarioLogueado.rol === "ADMIN";
 
           return (
             <div key={e.id} className="border p-4 rounded shadow hover:shadow-lg transition">
@@ -100,8 +102,7 @@ export default function ListaEmprendedores() {
                 >
                   Ver Perfil
                 </button>
-
-                {esPropietario && (
+                {(esPropietario || esAdmin) && (
                   <>
                     <button
                       className="bg-yellow-500 text-white px-2 py-1 rounded"

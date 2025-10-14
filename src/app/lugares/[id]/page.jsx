@@ -282,8 +282,8 @@ export default function LugarDetalle() {
                   ) : (
                     <div className="text-gray-700">{r.comentario}</div>
                   )}
-                  {/* Solo el dueño de la reseña puede editar/eliminar */}
-                  {usuarioLogueado.id === r.usuarioId && editResenaId !== r.id && (
+                  {/* Solo el dueño de la reseña o el ADMIN puede editar/eliminar */}
+                  {(usuarioLogueado.id === r.usuarioId || usuarioLogueado.rol === "ADMIN") && editResenaId !== r.id && (
                     <div className="flex gap-2 mt-2">
                       <button
                         className="bg-yellow-500 text-white px-2 py-1 rounded"
