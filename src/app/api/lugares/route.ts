@@ -17,11 +17,32 @@ export async function POST(req: NextRequest) {
     if (payload.rol !== "ADMIN") {
       return NextResponse.json({ error: "Solo el administrador puede registrar lugares" }, { status: 403 });
     }
-    const { nombre, descripcion, imagen_url, latitud, longitud } = await req.json();
+    const body = await req.json();
+    const { nombre, descripcion, imagen_url, latitud, longitud, usuarioId } = body;
+
     const lugar = await prisma.lugarTuristico.create({
-      data: { nombre, descripcion, imagen_url, latitud, longitud },
+      data: {
+        nombre,
+        descripcion,
+        imagen_url,
+        latitud,
+        longitud,
+      },
     });
-    return NextResponse.json({ message: "Lugar registrado", lugar });
+
+    // Registro de contenido agregado en el periodo
+    await prisma.valorIndicador.create({
+      data: {
+        indicadorId: 58, // <-- id de "Contenido agregado en el periodo"
+        valorActual: 1,
+        fecha: new Date(),
+      },
+    });
+
+    return new Response(JSON.stringify({ lugar }), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (err) {
     return NextResponse.json({ error: "Error al registrar", detalle: typeof err === "object" && err !== null && "message" in err ? (err as any).message : String(err) }, { status: 500 });
   }

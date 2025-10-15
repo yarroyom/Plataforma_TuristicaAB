@@ -17,6 +17,8 @@ export default function LugarDetalle() {
   const [esFavorito, setEsFavorito] = useState(false);
   const [calificacionUsuario, setCalificacionUsuario] = useState(0);
   const [loadingCalificacion, setLoadingCalificacion] = useState(false);
+  const [perfilFacebook, setPerfilFacebook] = useState(null);
+  const [redes, setRedes] = useState([]);
 
   // Obtener usuario logueado real
   useEffect(() => {
@@ -63,6 +65,29 @@ export default function LugarDetalle() {
           setCalificacionUsuario(data[0].calificacion);
         } else {
           setCalificacionUsuario(0);
+        }
+      });
+    // Obtener el perfil de Facebook del usuario logueado
+    fetch("/api/me", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.id) {
+          fetch(`/api/redes-sociales?usuarioId=${data.id}`)
+            .then(res => res.json())
+            .then(rs => {
+              const fb = rs.find(r => r.nombre.toLowerCase() === "facebook");
+              setPerfilFacebook(fb);
+            });
+        }
+      });
+    // Obtener redes sociales del usuario logueado
+    fetch("/api/me", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.id) {
+          fetch(`/api/redes-sociales?usuarioId=${data.id}`)
+            .then(res => res.json())
+            .then(rs => setRedes(rs));
         }
       });
   }, [id, usuarioLogueado.id]);
@@ -124,12 +149,43 @@ export default function LugarDetalle() {
   };
 
   // Guardar edición
-  const handleGuardarEdicion = (id) => {
-    setResenas(resenas.map(r =>
-      r.id === id ? { ...r, comentario: editResenaTexto } : r
-    ));
-    setEditResenaId(null);
-    setEditResenaTexto("");
+  const handleGuardarEdicion = async (id) => {
+    try {
+      const res = await fetch("/api/resenas", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          resenaId: id,
+          nuevoComentario: editResenaTexto,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.resena) {
+        setResenas(resenas.map(r =>
+          r.id === id ? { ...r, comentario: data.resena.comentario } : r
+        ));
+        setEditResenaId(null);
+        setEditResenaTexto("");
+        await fetch("/api/indicadores/actualizaciones", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ usuarioId: usuarioLogueado.id }),
+        });
+      } else if (res.ok) {
+        // Si el backend no retorna la reseña, fuerza el cambio localmente
+        setResenas(resenas.map(r =>
+          r.id === id ? { ...r, comentario: editResenaTexto } : r
+        ));
+        setEditResenaId(null);
+        setEditResenaTexto("");
+      } else if (data.error) {
+        alert(data.error);
+      }
+    } catch (err) {
+      alert("Error de conexión");
+    }
   };
 
   // Cancelar edición
@@ -192,6 +248,70 @@ export default function LugarDetalle() {
     alert(`Calificaste con ${valor} estrella(s)`);
   };
 
+  const registrarUsoComoLlegar = async () => {
+    await fetch("/api/indicadores/como-llegar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        lugarId: Number(id),
+        usuarioId: usuarioLogueado.id,
+      }),
+    });
+  };
+
+  const compartirEnFacebook = async () => {
+    await fetch("/api/indicadores/compartir-facebook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        usuarioId: usuarioLogueado.id,
+        lugarId: lugar.id,
+        nombre: lugar.nombre,
+        descripcion: lugar.descripcion,
+        imagen_url: lugar.imagen_url,
+        url: window.location.href,
+      }),
+    });
+    // Texto personalizado para la publicación
+    const texto = `${lugar.nombre}\n${lugar.descripcion || ""}\nReferencia: Plataforma Agua Blanca\n${window.location.href}`;
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(texto)}`,
+      "_blank"
+    );
+  };
+
+  const compartirEnRedSocial = async (red) => {
+    await fetch("/api/indicadores/compartir-red-social", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        usuarioId: usuarioLogueado.id,
+        lugarId: lugar.id,
+        redSocial: red.nombre,
+        linkPerfil: red.link,
+        urlLugar: window.location.href,
+      }),
+    });
+    if (red.nombre.toLowerCase() === "facebook") {
+      const texto = `${lugar.nombre}\n${lugar.descripcion || ""}\nReferencia: Plataforma Agua Blanca\n${window.location.href}`;
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(texto)}`,
+        "_blank"
+      );
+    }
+    // Puedes agregar lógica para otras redes sociales aquí
+  };
+
+  const urlLugar = typeof window !== "undefined" ? window.location.href : "";
+
+  const copiarEnlace = () => {
+    navigator.clipboard.writeText(urlLugar);
+    alert("Enlace copiado al portapapeles");
+  };
+
   if (!lugar) return <p className="p-4">Lugar no encontrado...</p>;
 
   return (
@@ -215,6 +335,39 @@ export default function LugarDetalle() {
           )}
           <div className="p-6">
             <h1 className="text-3xl font-bold mb-2 text-blue-700">{lugar.nombre}</h1>
+            {/* Botón para compartir solo en Facebook usando el perfil guardado */}
+            <div className="mb-4 flex gap-2 flex-wrap">
+              {redes
+                .filter(red => red.nombre.toLowerCase() === "facebook")
+                .map(red => (
+                  <button
+                    key={red.id}
+                    className="bg-blue-600 text-white px-3 py-1 rounded"
+                    onClick={() => compartirEnRedSocial(red)}
+                  >
+                    Compartir en Facebook
+                  </button>
+                ))}
+            </div>
+            {/* Mostrar y copiar enlace del lugar */}
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-gray-600 break-all">{urlLugar}</span>
+              <button
+                className="bg-blue-500 text-white px-2 py-1 rounded"
+                onClick={copiarEnlace}
+              >
+                Copiar enlace
+              </button>
+            </div>
+            {/* Botón para compartir en Facebook */}
+            <div className="mb-4">
+              <button
+                className="bg-blue-600 text-white px-3 py-1 rounded"
+                onClick={compartirEnFacebook}
+              >
+                Compartir en mi Facebook
+              </button>
+            </div>
             {/* Promedio de calificaciones */}
             <div className="mb-2">
               <span className="font-semibold">Promedio de calificación: </span>
@@ -222,6 +375,38 @@ export default function LugarDetalle() {
                 ? (lugar.calificacionTotal / lugar.numeroCalificaciones).toFixed(2)
                 : "Sin calificaciones"}
             </div>
+            {/* Botón de ubicación y navegación */}
+            {lugar.latitud && lugar.longitud && (
+              <div className="mb-4 flex flex-col gap-2">
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  onClick={() => {
+                    registrarUsoComoLlegar();
+                    window.open(
+                      `https://www.google.com/maps/dir/?api=1&destination=${lugar.latitud},${lugar.longitud}`,
+                      "_blank"
+                    );
+                  }}
+                >
+                  Cómo llegar (Google Maps)
+                </button>
+                <div className="mt-2 text-gray-700">
+                  <span className="font-semibold">Ubicación: </span>
+                  {lugar.direccion
+                    ? (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lugar.direccion)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline"
+                        >
+                          {lugar.direccion}
+                        </a>
+                      )
+                    : `${lugar.latitud}, ${lugar.longitud}`}
+                </div>
+              </div>
+            )}
             {/* Sección de calificación de estrellas */}
             <div className="mb-4">
               <h3 className="font-semibold mb-2">Califica este lugar:</h3>
@@ -330,24 +515,25 @@ export default function LugarDetalle() {
                       </button>
                     </>
                   ) : (
-                    <div className="text-gray-700">{r.comentario}</div>
-                  )}
-                  {/* Solo el dueño de la reseña o el ADMIN puede editar/eliminar */}
-                  {(usuarioLogueado.id === r.usuarioId || usuarioLogueado.rol === "ADMIN") && editResenaId !== r.id && (
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        className="bg-yellow-500 text-white px-2 py-1 rounded"
-                        onClick={() => handleEditarResena(r.id, r.comentario)}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        className="bg-red-600 text-white px-2 py-1 rounded"
-                        onClick={() => handleEliminarResena(r.id)}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
+                    <>
+                      <div className="text-gray-700">{r.comentario}</div>
+                      {(usuarioLogueado.id === r.usuarioId || usuarioLogueado.rol === "ADMIN") && (
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            className="bg-yellow-500 text-white px-2 py-1 rounded"
+                            onClick={() => handleEditarResena(r.id, r.comentario)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            className="bg-red-600 text-white px-2 py-1 rounded"
+                            onClick={() => handleEliminarResena(r.id)}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -361,6 +547,18 @@ export default function LugarDetalle() {
       >
         {esFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
       </button>
+      {/* Botones para compartir en redes sociales del usuario */}
+      <div className="mb-4 flex gap-2 flex-wrap">
+        {redes.map(red => (
+          <button
+            key={red.id}
+            className="bg-blue-600 text-white px-3 py-1 rounded"
+            onClick={() => compartirEnRedSocial(red)}
+          >
+            Compartir en {red.nombre}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

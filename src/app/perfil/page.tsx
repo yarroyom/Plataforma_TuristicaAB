@@ -111,8 +111,17 @@ export default function PerfilPage() {
   };
 
   return (
-    <div className="p-8 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Mi Cuenta</h1>
+    <div className="p-8 max-w-md mx-auto relative">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">Mi Cuenta</h1>
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded shadow"
+          onClick={() => window.open("/redes-sociales", "_blank")}
+          style={{ zIndex: 50 }}
+        >
+          Redes sociales
+        </button>
+      </div>
       <div className="flex flex-col items-center mb-6">
         {usuario.foto ? (
           <>

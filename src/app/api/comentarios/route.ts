@@ -55,6 +55,12 @@ export async function POST(request: Request) {
     }
   }
 
+  // Llama al endpoint de actualizaciones
+  await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/indicadores/actualizaciones`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
   return new Response(JSON.stringify(nuevaReseña), {
     status: 201,
     headers: { "Content-Type": "application/json" },

@@ -92,6 +92,16 @@ export default function NuevoEmprendedor() {
       }),
     });
 
+    // Llama al endpoint de indicador de tareas completadas
+    await fetch("/api/indicadores/tareas-completadas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        usuarioId: usuarioLogueado.id,
+      }),
+    });
+
     console.log("Respuesta fetch:", res); // <-- log para depuración
 
     if (res.ok) {

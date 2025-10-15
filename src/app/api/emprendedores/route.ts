@@ -74,10 +74,52 @@ export async function POST(req: NextRequest) {
       console.error("Error al enviar correo:", error);
     }
 
+    // Registro de contenido agregado en el periodo
+    await prisma.valorIndicador.create({
+      data: {
+        indicadorId: 58, // <-- id de "Contenido agregado en el periodo"
+        valorActual: 1,
+        fecha: new Date(),
+      },
+    });
+
     return NextResponse.json({ perfil }); // <-- Faltaba este return
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Error creando perfil" }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, nombre, descripcion, telefono, direccion, foto } = body;
+
+    // Actualiza el perfil del emprendedor
+    const perfil = await prisma.emprendedorPerfil.update({
+      where: { id },
+      data: {
+        nombre,
+        descripcion,
+        telefono,
+        direccion,
+        foto,
+      },
+    });
+
+    // Llama al endpoint de actualizaciones
+    await prisma.valorIndicador.create({
+      data: {
+        indicadorId: 57,
+        valorActual: 1,
+        fecha: new Date(),
+      },
+    });
+
+    return NextResponse.json({ perfil });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Error actualizando perfil" }, { status: 500 });
   }
 }
 

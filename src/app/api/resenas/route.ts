@@ -26,6 +26,16 @@ export async function POST(req: NextRequest) {
         usuario: true, // Incluye el usuario con la foto
       },
     });
+
+    // Registro de contenido agregado en el periodo
+    await prisma.valorIndicador.create({
+      data: {
+        indicadorId: 58, // <-- id de "Contenido agregado en el periodo"
+        valorActual: 1,
+        fecha: new Date(),
+      },
+    });
+
     return NextResponse.json({
       resena: {
         id: resena.id,
@@ -64,5 +74,40 @@ export async function GET(req: NextRequest) {
     );
   } catch (err) {
     return NextResponse.json({ error: "Error al obtener reseñas" }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  let token = req.cookies.get("token")?.value;
+  if (!token) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.replace("Bearer ", "");
+    }
+  }
+  if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  try {
+    const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const { resenaId, nuevoComentario } = await req.json();
+
+    // Actualiza la reseña existente
+    await prisma.reseña.update({
+      where: { id: resenaId },
+      data: { comentario: nuevoComentario },
+    });
+
+    // Llama al endpoint de actualizaciones
+    await prisma.valorIndicador.create({
+      data: {
+        indicadorId: 57,
+        valorActual: 1,
+        fecha: new Date(),
+      },
+    });
+
+    return NextResponse.json({ message: "Reseña actualizada correctamente" });
+  } catch (err) {
+    return NextResponse.json({ error: "Error al actualizar reseña" }, { status: 500 });
   }
 }

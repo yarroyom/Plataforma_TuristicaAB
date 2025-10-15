@@ -41,6 +41,7 @@ model Usuario {
   emprendedorPerfiles EmprendedorPerfil[] // Relación uno-a-muchos
   reseñas             Reseña[]           @relation("UsuarioReseñas")
   favoritos           Favorito[]         // <-- relación inversa agregada
+  redSociales         RedSocial[]        // <-- relación inversa agregada
 }
 
 model EmprendedorPerfil {
@@ -61,11 +62,12 @@ model LugarTuristico {
   nombre       String
   descripcion  String?
   imagen_url   String?   // Foto principal (Cloudinary)
-  latitud      Float?    // Para mapa
-  longitud     Float?    // Para mapa
+  latitud      Float?    // <-- aquí la latitud
+  longitud     Float?    // <-- aquí la longitud
   creadoEn     DateTime  @default(now())
   calificacionTotal Float @default(0) // <-- nuevo campo
   numeroCalificaciones Int @default(0) // <-- nuevo campo
+  direccion    String?   // <-- opcional, para dirección textual
 
   reseñas      Reseña[]
   favoritos    Favorito[] // <-- relación inversa agregada
@@ -120,6 +122,16 @@ model ValorIndicador {
   fecha         DateTime
   // Puedes agregar campos como fuente, observaciones, etc.
   indicador     Indicador @relation(fields: [indicadorId], references: [id])
+}
+
+model RedSocial {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  nombre    String   // Ejemplo: Facebook, Instagram, etc.
+  link      String   // Link al perfil
+  creadoEn  DateTime @default(now())
+
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
 // Ejemplo de registros para Indicador (agrega estos en Prisma Studio o con un script):

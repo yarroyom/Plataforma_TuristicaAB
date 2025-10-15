@@ -140,6 +140,12 @@ export default function Principal() {
                 Estadística
               </li>
             )}
+            <li
+              onClick={() => window.open("/redes-sociales", "_blank")}
+              className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+            >
+              Redes sociales
+            </li>
           </ul>
         </nav>
       )}
