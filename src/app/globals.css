@@ -3,9 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-size-base: 16px;
 }
 
-@theme inline {
+:root {
+  /* Inline theme variables (replaced invalid @theme at-rule) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -19,8 +21,416 @@
   }
 }
 
+/* Tipografía fluid: escala básica */
+html{ font-size: var(--font-size-base); }
+
+/* Ajustes responsivos: aumentan tamaño en pantallas grandes */
+@media (min-width: 640px) {
+  :root{ --font-size-base: 16px; }
+}
+@media (min-width: 1024px) {
+  :root{ --font-size-base: 17px; }
+}
+@media (min-width: 1280px) {
+  :root{ --font-size-base: 18px; }
+}
+
+/* Contenedor máximo y ajustes móviles por si alguna página no usa Tailwind */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  max-width: 1280px;
+}
+
+/* Mejor experiencia en móviles: clickable areas, legibilidad */
+button, a { touch-action: manipulation; }
+input, textarea, select { font-size: 1rem; }
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Asegura que el canvas de Chart.js use todo el contenedor responsive */
+.chartjs-hidden-iframe { display: none; }
+.chart-container, .chart-wrapper { width: 100%; height: 100%; }
+canvas { max-width: 100% !important; height: 100% !important; }
+
+/* Imágenes de lugares: tamaños responsivos.
+   - En pantallas pequeñas se muestran más pequeñas (ej. 80-120px).
+   - En pantallas grandes conservan tamaño mayor (auto / 100% del contenedor).
+   Añade class="lugar-imagen" a las <img> de la página principal si quieres objetivo exacto. */
+.lugar-imagen {
+  width: 220px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* Ajuste global para imágenes dentro de tarjetas de lugar si no usas la clase */
+.lugar-card img,
+.card-lugar img,
+.bg-white img.lugar {
+  width: 220px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* Pantallas pequeñas: reducir tamaño de las imágenes para que la página se vea compacta */
+@media (max-width: 640px) {
+  .lugar-imagen,
+  .lugar-card img,
+  .card-lugar img,
+  .bg-white img.lugar {
+    width: 96px;
+    height: 64px;
+  }
+}
+
+/* Ajuste ligero para pantallas intermedias */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .lugar-imagen,
+  .lugar-card img,
+  .card-lugar img,
+  .bg-white img.lugar {
+    width: 160px;
+    height: 100px;
+  }
+}
+
+/* Negocios / emprendedores: imágenes y tarjetas responsivas */
+/* Usa class="negocio-card" en el contenedor y class="negocio-image" en la <img> del negocio */
+
+.negocio-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem; /* compacto */
+  border-radius: 6px;
+  background: var(--color-background);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.negocio-image {
+  width: 220px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* Pantallas pequeñas: reducir imagenes y padding */
+@media (max-width: 640px) {
+  .negocio-card {
+    padding: 0.4rem;
+  }
+  .negocio-image {
+    width: 96px;
+    height: 64px;
+  }
+  .negocio-card .titulo-negocio {
+    font-size: 0.85rem;
+  }
+}
+
+/* Pantallas intermedias: tamaño medio */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .negocio-card {
+    padding: 0.6rem;
+  }
+  .negocio-image {
+    width: 140px;
+    height: 90px;
+  }
+  .negocio-card .titulo-negocio {
+    font-size: 0.95rem;
+  }
+}
+
+/* Desktop: compacto pero legible */
+@media (min-width: 1025px) {
+  .negocio-card {
+    padding: 0.75rem;
+  }
+  .negocio-image {
+    width: 200px;
+    height: 120px;
+  }
+  .negocio-card .titulo-negocio {
+    font-size: 1rem;
+  }
+}
+
+/* Opcional: hace que las tarjetas quepan mejor en grid */
+.grid-negocios {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0,1fr));
+  gap: 0.75rem;
+}
+@media (min-width: 640px) {
+  .grid-negocios { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (min-width: 1024px) {
+  .grid-negocios { grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+
+/* Dropdown lateral: el contenedor debe tener class="dropdown" y el menú class="dropdown-menu" */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Por defecto en desktop: abrir a la derecha del trigger */
+.dropdown-menu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  transform: translateX(8px);
+  display: none;
+  min-width: 180px;
+  background: var(--color-background);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  border-radius: 6px;
+  z-index: 40;
+  padding: 0.5rem 0;
+  transition: opacity .12s ease, transform .12s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Variante: abrir hacia la izquierda */
+.dropdown-menu-left {
+  left: auto;
+  right: 100%;
+  transform: translateX(-8px);
+}
+
+/* Mostrar menú cuando el padre tiene :hover o clase .open (compatible con JS toggles) */
+.dropdown:hover .dropdown-menu,
+.dropdown.open .dropdown-menu {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+/* Estilos de items */
+.dropdown-menu a,
+.dropdown-menu button {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+/* Hover item */
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+/* En pantallas pequeñas, revertir a menú vertical debajo del trigger */
+@media (max-width: 640px) {
+  .dropdown-menu,
+  .dropdown-menu-left {
+    left: 0 !important;
+    right: auto !important;
+    top: 100%;
+    transform: translateY(6px);
+    min-width: 160px;
+  }
+}
+
+/* Side drawer (panel lateral) --------------------------------------------- */
+/* Contenedor del drawer: coloca <nav class="side-drawer"> ... </nav> */
+.side-drawer {
+  position: fixed;
+  top: 0;
+  left: 0; /* cambia a right:0 si prefieres que abra desde la derecha */
+  height: 100vh;
+  width: 0;
+  max-width: 320px; /* ancho final */
+  overflow: hidden;
+  background: var(--color-background, #fff);
+  box-shadow: 2px 0 12px rgba(0,0,0,0.12);
+  transform: translateX(-100%); /* oculto por defecto (fuera de la pantalla) */
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), width .2s ease;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cuando está abierto: se posiciona en pantalla completa del ancho definido */
+.side-drawer.open {
+  transform: translateX(0);
+  width: min(320px, 85%);
+}
+
+/* Variante para abrir desde la derecha */
+.side-drawer.side-drawer-right {
+  left: auto;
+  right: 0;
+  transform: translateX(100%);
+}
+.side-drawer.side-drawer-right.open {
+  transform: translateX(0);
+}
+
+/* Backdrop (fondo oscuro que cierra el drawer al click) */
+.side-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+  z-index: 50;
+}
+.side-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Contenido del drawer: menú vertical compacto */
+.side-drawer .drawer-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.side-drawer .drawer-body {
+  padding: 0.5rem 0.75rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.side-drawer a, .side-drawer button {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: 0.95rem;
+  border-radius: 6px;
+}
+.side-drawer a:hover, .side-drawer button:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+/* Botón hamburguesa compacto (si no existe) */
+.hamburger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+/* Icono interno: barras */
+.hamburger .bar {
+  width: 20px;
+  height: 2px;
+  background: var(--foreground);
+  display:block;
+  position:relative;
+  transition: transform .2s ease, opacity .2s ease;
+}
+.hamburger .bar:before,
+.hamburger .bar:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: inherit;
+  transition: transform .2s ease;
+}
+.hamburger .bar:before { top: -6px; }
+.hamburger .bar:after  { top: 6px; }
+
+/* Animación al abrir (clase .open en el botón o en el drawer) */
+.hamburger.open .bar { opacity: 0; }
+.hamburger.open .bar:before { transform: translateY(6px) rotate(45deg); opacity: 1; }
+.hamburger.open .bar:after  { transform: translateY(-6px) rotate(-45deg); opacity: 1; }
+
+/* Responsive: en móvil el drawer ocupa más ancho, en desktop menos intrusivo */
+@media (max-width: 640px) {
+  .side-drawer { max-width: 85%; }
+  .side-drawer.open { width: 85%; }
+}
+@media (min-width: 1024px) {
+  .side-drawer { max-width: 360px; }
+  .side-drawer.open { width: 320px; }
+}
+
+/* Fondo verde limón para la página de reseñas */
+.resenas-page {
+  background: linear-gradient(180deg, #e7ffd2 0%, #c9f07a 100%); /* verde limón suave */
+  min-height: 100vh;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+/* Si la página tiene un contenedor interno habitualmente con fondo blanco, 
+   mantenlo transparente para que se vea el fondo */
+.resenas-page .page-container,
+.resenas-page .card {
+  background: transparent;
+}
+
+/* Fondo verde limón para la página "Dejar comentario" */
+.comentarios-page {
+  background: linear-gradient(180deg, #f2ffda 0%, #d6f37a 100%); /* verde limón suave */
+  min-height: 100vh;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+/* Si el contenido interior tiene contenedor con fondo blanco, hazlo semitransparente o transparente */
+.comentarios-page .page-container,
+.comentarios-page .card,
+.comentarios-page form {
+  background: transparent;
+}
+
+/* Formulario: fondo blanco en la página de comentarios */
+.comentarios-page form,
+.comentarios-page .page-container form,
+.comentarios-page .card form {
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.04);
+  color: #111827; /* texto oscuro sobre fondo claro */
+}
+
+/* Inputs dentro del formulario */
+.comentarios-page form input,
+.comentarios-page form textarea,
+.comentarios-page form select {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 0.5rem;
+  border-radius: 6px;
+  color: #111827;
+}
+
+/* Ajustes móviles: menos padding */
+@media (max-width: 640px) {
+  .comentarios-page { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .comentarios-page form { padding: 0.75rem; }
+  .comentarios-page form input,
+  .comentarios-page form textarea,
+  .comentarios-page form select { padding: 0.45rem; }
 }

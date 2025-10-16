@@ -57,57 +57,61 @@ export default function NuevoComentarioPage() {
   };
 
   return (
-    <div className="p-8 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Dejar Comentario</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="font-semibold">Lugar:</label>
-        <select
-          name="lugarId"
-          value={form.lugarId}
-          onChange={handleChange}
-          required
-          className="border p-2 rounded"
-        >
-          <option value="">Selecciona un lugar</option>
-          {lugares.map(l => (
-            <option key={l.id} value={l.id}>{l.nombre}</option>
-          ))}
-        </select>
-        <label className="font-semibold">Comentario:</label>
-        <textarea
-          name="comentario"
-          value={form.comentario}
-          onChange={handleChange}
-          required
-          className="border p-2 rounded"
-          rows={3}
-        />
-        <label className="font-semibold">Calificación:</label>
-        <div className="flex gap-1">
-          {[1,2,3,4,5].map(valor => (
-            <span
-              key={valor}
-              className={`cursor-pointer text-2xl ${form.calificacion >= valor ? "text-yellow-400" : "text-gray-300"}`}
-              onClick={() => handleCalificacion(valor)}
-            >★</span>
-          ))}
+    <div className="comentarios-page">
+      <div className="page-container max-w-3xl mx-auto px-4">
+        <div className="p-8 max-w-md mx-auto">
+          <h1 className="text-2xl font-bold mb-4">Dejar Comentario</h1>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <label className="font-semibold">Lugar:</label>
+            <select
+              name="lugarId"
+              value={form.lugarId}
+              onChange={handleChange}
+              required
+              className="border p-2 rounded"
+            >
+              <option value="">Selecciona un lugar</option>
+              {lugares.map(l => (
+                <option key={l.id} value={l.id}>{l.nombre}</option>
+              ))}
+            </select>
+            <label className="font-semibold">Comentario:</label>
+            <textarea
+              name="comentario"
+              value={form.comentario}
+              onChange={handleChange}
+              required
+              className="border p-2 rounded"
+              rows={3}
+            />
+            <label className="font-semibold">Calificación:</label>
+            <div className="flex gap-1">
+              {[1,2,3,4,5].map(valor => (
+                <span
+                  key={valor}
+                  className={`cursor-pointer text-2xl ${form.calificacion >= valor ? "text-yellow-400" : "text-gray-300"}`}
+                  onClick={() => handleCalificacion(valor)}
+                >★</span>
+              ))}
+            </div>
+            <label className="font-semibold">Fecha de visita (opcional):</label>
+            <input
+              type="date"
+              name="fechaVisita"
+              value={form.fechaVisita}
+              onChange={handleChange}
+              className="border p-2 rounded"
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+              disabled={loading}
+            >
+              {loading ? "Enviando..." : "Enviar Comentario"}
+            </button>
+          </form>
         </div>
-        <label className="font-semibold">Fecha de visita (opcional):</label>
-        <input
-          type="date"
-          name="fechaVisita"
-          value={form.fechaVisita}
-          onChange={handleChange}
-          className="border p-2 rounded"
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-          disabled={loading}
-        >
-          {loading ? "Enviando..." : "Enviar Comentario"}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

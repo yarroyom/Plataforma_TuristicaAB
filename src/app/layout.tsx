@@ -23,11 +23,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
+      <head>
+        {/* Agrega meta viewport para responsive */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        {/* Contenedor global responsive: padding lateral en móvil y centrar en desktop */}
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* ...existing header/nav if any... */}
+            {children}
+            {/* ...existing footer if any... */}
+          </div>
+        </div>
       </body>
     </html>
   );

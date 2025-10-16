@@ -29,6 +29,12 @@ enum Rol {
   ADMIN
 }
 
+// Agrega nuevo enum para tipo de lugar
+enum TipoLugar {
+  TURISTICO
+  CULTURAL
+}
+
 model Usuario {
   id       Int      @id @default(autoincrement())
   nombre   String
@@ -65,9 +71,14 @@ model LugarTuristico {
   latitud      Float?    // <-- aquí la latitud
   longitud     Float?    // <-- aquí la longitud
   creadoEn     DateTime  @default(now())
-  calificacionTotal Float @default(0) // <-- nuevo campo
-  numeroCalificaciones Int @default(0) // <-- nuevo campo
   direccion    String?   // <-- opcional, para dirección textual
+
+  // Nuevo campo: tipo (Turístico o Cultural)
+  tipo         TipoLugar @default(TURISTICO)
+
+  // Agregados: campos para calificaciones (suma y conteo)
+  calificacionTotal    Float   @default(0)
+  numeroCalificaciones Int     @default(0)
 
   reseñas      Reseña[]
   favoritos    Favorito[] // <-- relación inversa agregada
@@ -132,6 +143,19 @@ model RedSocial {
   creadoEn  DateTime @default(now())
 
   usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+}
+
+model Rating {
+  id        Int      @id @default(autoincrement())
+  lugarId   Int
+  usuarioId Int
+  valor     Int
+  creadoEn  DateTime @default(now())
+
+  @@unique([lugarId, usuarioId])
+  // Relaciones (opcional según tus modelos)
+  // lugar   LugarTuristico @relation(fields: [lugarId], references: [id])
+  // usuario Usuario @relation(fields: [usuarioId], references: [id])
 }
 
 // Ejemplo de registros para Indicador (agrega estos en Prisma Studio o con un script):

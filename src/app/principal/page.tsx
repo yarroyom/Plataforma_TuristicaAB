@@ -14,6 +14,8 @@ interface Lugar {
 export default function Principal() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [usuarioLogueado, setUsuarioLogueado] = useState({ rol: "" });
+  // Nuevo estado para saber cuándo se cargó el usuario (evita flicker)
+  const [userLoaded, setUserLoaded] = useState(false);
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [toast, setToast] = useState<{ mensaje: string; visible: boolean }>({
     mensaje: "",
@@ -28,7 +30,9 @@ export default function Principal() {
       .then((data) => {
         if (data && data.rol) setUsuarioLogueado({ rol: data.rol });
         else setUsuarioLogueado({ rol: "" });
-      });
+        setUserLoaded(true); // marcamos que ya cargó el usuario
+      })
+      .catch(() => setUserLoaded(true)); // en error también marcamos cargado
   }, []);
 
   useEffect(() => {
@@ -66,6 +70,36 @@ export default function Principal() {
     // Elimina la cookie del token (puedes hacerlo con una petición al backend)
     await fetch("/api/logout", { method: "POST", credentials: "include" });
     router.push("/login");
+  };
+
+  // Eliminar lugar (solo ADMIN)
+  const handleEliminar = async (id: number) => {
+    if (
+      !confirm(
+        "¿Confirma eliminar este lugar? Esta acción es irreversible."
+      )
+    )
+      return;
+    try {
+      const res = await fetch(`/api/lugares/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setLugares((prev) => prev.filter((l) => l.id !== id));
+        setToast({ mensaje: "Lugar eliminado", visible: true });
+        if (toastTimeout.current) clearTimeout(toastTimeout.current);
+        toastTimeout.current = setTimeout(
+          () => setToast({ mensaje: "", visible: false }),
+          3000
+        );
+      } else {
+        const err = await res.json().catch(() => ({ error: "Error" }));
+        alert(err.error || "No se pudo eliminar el lugar");
+      }
+    } catch (e) {
+      alert("Error de conexión");
+    }
   };
 
   return (
@@ -132,7 +166,7 @@ export default function Principal() {
             >
               Dejar Comentario
             </li>
-            {usuarioLogueado.rol === "ADMIN" && (
+            {userLoaded && usuarioLogueado.rol === "ADMIN" && (
               <li
                 onClick={() => router.push("/estadistica")}
                 className="hover:bg-gray-100 p-2 rounded cursor-pointer"
@@ -154,7 +188,7 @@ export default function Principal() {
       <main className="p-4">
         <h2 className="text-2xl font-bold mb-4">Lugares Turísticos</h2>
         {/* Botón solo para administrador */}
-        {usuarioLogueado.rol === "ADMIN" && (
+        {userLoaded && usuarioLogueado.rol === "ADMIN" && (
           <button
             className="bg-green-600 text-white px-4 py-2 rounded mb-4"
             onClick={() => router.push("/lugares/nuevo")}
@@ -179,7 +213,7 @@ export default function Principal() {
             .map((l) => (
               <div
                 key={l.id}
-                className="w-48 text-center cursor-pointer hover:shadow-lg"
+                className="w-48 text-center cursor-pointer hover:shadow-lg relative"
                 onClick={() => router.push(`/lugares/${l.id}`)}
               >
                 {l.imagen_url && (
@@ -192,6 +226,21 @@ export default function Principal() {
                 <div className="block mt-2 font-bold text-blue-600 hover:underline">
                   {l.nombre}
                 </div>
+
+                {/* Botón eliminar (solo ADMIN). e.stopPropagation() evita navegación */}
+                {userLoaded && usuarioLogueado.rol === "ADMIN" && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEliminar(l.id);
+                    }}
+                    className="absolute top-1 right-1 bg-red-600 text-white px-2 py-1 rounded text-xs"
+                    title="Eliminar lugar"
+                  >
+                    Eliminar
+                  </button>
+                )}
+                {/* /changed code */}
               </div>
             ))}
         </div>

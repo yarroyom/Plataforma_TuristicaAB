@@ -18,15 +18,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Solo el administrador puede registrar lugares" }, { status: 403 });
     }
     const body = await req.json();
-    const { nombre, descripcion, imagen_url, latitud, longitud, usuarioId } = body;
+    const { nombre, descripcion, imagen_url, latitud, longitud, tipo } = body;
+
+    // valida campos mínimos según tu lógica...
+    if (!nombre) {
+      return new Response(JSON.stringify({ error: "Nombre es requerido" }), { status: 400 });
+    }
 
     const lugar = await prisma.lugarTuristico.create({
       data: {
         nombre,
         descripcion,
         imagen_url,
-        latitud,
-        longitud,
+        latitud: latitud ? Number(latitud) : undefined,
+        longitud: longitud ? Number(longitud) : undefined,
+        // Si envías tipo como string "CULTURAL" o "TURISTICO", se guarda en el enum
+        ...(tipo && { tipo: tipo }),
       },
     });
 

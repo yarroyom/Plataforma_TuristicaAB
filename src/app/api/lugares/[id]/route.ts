@@ -69,3 +69,28 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     );
   }
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const id = Number(params.id);
+  if (Number.isNaN(id)) {
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  }
+
+  // Validación simple de sesión: verifica existencia de cookie 'token'
+  const token = req.cookies.get("token")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  try {
+    // Opcional: podrías validar el token y el rol aquí si tienes función de auth
+    await prisma.lugarTuristico.delete({
+      where: { id },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    console.error("Error al eliminar lugar:", err);
+    // Si tiene FK/restricciones, devuelve mensaje concreto
+    return NextResponse.json({ error: err.message || "Error al eliminar" }, { status: 500 });
+  }
+}

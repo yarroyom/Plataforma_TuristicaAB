@@ -11,13 +11,49 @@ interface Lugar {
 
 export default function LugaresPage() {
   const [lugares, setLugares] = useState<Lugar[]>([]);
+  const [usuarioLogueado, setUsuarioLogueado] = useState<{ id?: number; rol?: string }>({
+    rol: "",
+  });
   const router = useRouter();
 
   useEffect(() => {
+    // Carga lista de lugares
     fetch("/api/lugares")
-      .then(res => res.json())
-      .then(data => setLugares(data));
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setLugares(data);
+      });
+
+    // Obtiene usuario actual (una sola vez)
+    fetch("/api/me", { credentials: "include" })
+      .then(r => {
+        if (!r.ok) return null;
+        return r.json();
+      })
+      .then(u => {
+        if (u && u.rol) setUsuarioLogueado({ id: u.id, rol: u.rol });
+      });
   }, []);
+
+  // Eliminar lugar (solo ADMIN)
+  const handleEliminar = async (id: number) => {
+    if (!confirm("¿Confirmas eliminar este lugar? Esta acción es irreversible.")) return;
+    try {
+      const res = await fetch(`/api/lugares/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setLugares(prev => prev.filter(l => l.id !== id));
+        alert("Lugar eliminado");
+      } else {
+        const err = await res.json().catch(() => ({ error: "Error" }));
+        alert(err.error || "No se pudo eliminar");
+      }
+    } catch (e) {
+      alert("Error de conexión");
+    }
+  };
 
   return (
     <div className="p-8">
@@ -42,6 +78,15 @@ export default function LugaresPage() {
             <div className="block mt-2 font-bold text-blue-600 hover:underline">
               {l.nombre}
             </div>
+            {/* Mostrar botón eliminar solo si es ADMIN */}
+            {usuarioLogueado.rol === "ADMIN" && (
+              <button
+                className="mt-3 inline-block bg-red-600 text-white px-3 py-1 rounded text-sm"
+                onClick={() => handleEliminar(l.id)}
+              >
+                Eliminar
+              </button>
+            )}
           </div>
         ))}
       </div>

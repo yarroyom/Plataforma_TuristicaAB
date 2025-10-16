@@ -1,44 +1,57 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
-  const { lugarId, calificacion, usuarioId } = await req.json();
+  const body = await req.json();
+  const { lugarId, usuarioId, calificacion } = body;
 
-  console.log("Calificar lugar:", { lugarId, calificacion, usuarioId });
-
-  // Guarda la calificación como reseña
-  await prisma.reseña.create({
-    data: {
-      lugarId: Number(lugarId),
-      comentario: "",
-      usuarioId: Number(usuarioId),
-      calificacion: calificacion,
-    },
-  });
-
-  // Actualiza los campos en LugarTuristico
-  const lugar = await prisma.lugarTuristico.findUnique({
-    where: { id: Number(lugarId) },
-  });
-  console.log("Lugar antes de update:", lugar);
-
-  if (lugar) {
-    const nuevaSuma = (lugar.calificacionTotal || 0) + calificacion;
-    const nuevoConteo = (lugar.numeroCalificaciones || 0) + 1;
-    const actualizado = await prisma.lugarTuristico.update({
-      where: { id: Number(lugarId) },
-      data: {
-        calificacionTotal: nuevaSuma,
-        numeroCalificaciones: nuevoConteo,
-      },
-    });
-    console.log("Lugar actualizado:", actualizado);
-  } else {
-    console.error("No se encontró el lugar con id:", lugarId);
+  if (!lugarId || !usuarioId || typeof calificacion !== "number") {
+    return NextResponse.json({ error: "Parámetros inválidos" }, { status: 400 });
   }
 
-  return new Response(JSON.stringify({ ok: true }), {
-    status: 201,
-    headers: { "Content-Type": "application/json" },
-  });
+  try {
+    // Upsert: crea o actualiza el rating por (lugarId, usuarioId)
+    await prisma.rating.upsert({
+      where: {
+        // Prisma genera un identificador compuesto: lugarId_usuarioId
+        lugarId_usuarioId: {
+          lugarId: Number(lugarId),
+          usuarioId: Number(usuarioId),
+        },
+      },
+      create: {
+        lugarId: Number(lugarId),
+        usuarioId: Number(usuarioId),
+        valor: Math.round(calificacion),
+      },
+      update: {
+        valor: Math.round(calificacion),
+        creadoEn: new Date(),
+      },
+    });
+
+    // Recalcular agregados desde la tabla Rating
+    const agg = await prisma.rating.aggregate({
+      where: { lugarId: Number(lugarId) },
+      _sum: { valor: true },
+      _count: { _all: true },
+    });
+
+    const suma = Number(agg._sum?.valor ?? 0);
+    const conteo = Number(agg._count?._all ?? 0);
+
+    // Actualizar campos en LugarTuristico
+    await prisma.lugarTuristico.update({
+      where: { id: Number(lugarId) },
+      data: {
+        calificacionTotal: suma,
+        numeroCalificaciones: conteo,
+      },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("Error al guardar rating:", err);
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
 }

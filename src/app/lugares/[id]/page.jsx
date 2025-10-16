@@ -232,20 +232,36 @@ export default function LugarDetalle() {
   };
 
   const handleCalificar = async (valor) => {
-    setLoadingCalificacion(true);
+    // Mostrar en UI inmediatamente
     setCalificacionUsuario(valor);
-    await fetch("/api/lugares/calificar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        lugarId: Number(id),
-        calificacion: valor,
-        usuarioId: usuarioLogueado.id, // <-- envía el id del usuario logueado
-      }),
-    });
-    setLoadingCalificacion(false);
-    alert(`Calificaste con ${valor} estrella(s)`);
+    setLoadingCalificacion(true);
+
+    try {
+      const res = await fetch("/api/lugares/calificar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          lugarId: Number(id),
+          usuarioId: usuarioLogueado.id,
+          calificacion: valor,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        // Mostrar mensaje pero mantener estrellas en la UI localmente
+        alert(data.error || "No se pudo guardar la calificación en el servidor");
+      } else {
+        // Opcional: refrescar datos del lugar si quieres mostrar promedio actualizado
+        // fetch(`/api/lugares/${id}`).then(r => r.json()).then(d => setLugar(d));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión al guardar calificación");
+    } finally {
+      setLoadingCalificacion(false);
+    }
   };
 
   const registrarUsoComoLlegar = async () => {
