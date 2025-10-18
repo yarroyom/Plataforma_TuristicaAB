@@ -76,21 +76,49 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }
 
-  // Validación simple de sesión: verifica existencia de cookie 'token'
+  // Verificar cookie/token de sesión
   const token = req.cookies.get("token")?.value;
   if (!token) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
+  // Intentar resolver usuario a partir del token.
+  // ADAPTA según tu esquema: aquí probamos dos opciones comunes:
+  // 1) Usuario tiene un campo `token`
+  // 2) Existe tabla `Session`/`session` que referencia a usuarioId / userId
+  let usuario: any = null;
+
   try {
-    // Opcional: podrías validar el token y el rol aquí si tienes función de auth
+    usuario = await prisma.usuario.findFirst({ where: { token } });
+  } catch (_) { usuario = null; }
+
+  if (!usuario) {
+    // intentar sesión
+    try {
+      const session = await prisma.session.findUnique({ where: { token } }).catch(() => null);
+      if (session?.usuarioId) {
+        usuario = await prisma.usuario.findUnique({ where: { id: session.usuarioId } }).catch(() => null);
+      } else if (session?.userId) {
+        usuario = await prisma.usuario.findUnique({ where: { id: session.userId } }).catch(() => null);
+      }
+    } catch (_) {
+      usuario = null;
+    }
+  }
+
+  // Si no encontramos usuario o no es ADMIN, denegamos
+  if (!usuario || usuario.rol !== "ADMIN") {
+    return NextResponse.json({ error: "Permiso denegado" }, { status: 403 });
+  }
+
+  // Usuario verificado como ADMIN -> proceder a eliminar
+  try {
     await prisma.lugarTuristico.delete({
       where: { id },
     });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error("Error al eliminar lugar:", err);
-    // Si tiene FK/restricciones, devuelve mensaje concreto
     return NextResponse.json({ error: err.message || "Error al eliminar" }, { status: 500 });
   }
 }

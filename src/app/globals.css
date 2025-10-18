@@ -434,3 +434,108 @@ canvas { max-width: 100% !important; height: 100% !important; }
   .comentarios-page form textarea,
   .comentarios-page form select { padding: 0.45rem; }
 }
+
+/* Página principal: quitar imagen de fondo, mantener contenedor */
+.principal-page {
+  background: none; /* foto eliminada */
+  min-height: 100vh;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  position: relative; /* necesario para posicionar logo */
+}
+
+/* Contenedor interno más compacto sobre el fondo */
+.principal-page .principal-content {
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Ajustes móviles (si aplica) */
+@media (max-width: 640px) {
+  .principal-page {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
+/* Logo posicionado respecto al header: usar top:100% + translateY para mantener posición al cambiar altura */
+.site-logo {
+  position: absolute;
+  top: 100%;               /* justo debajo del header */
+  right: 1rem;
+  transform: translateY(1.5rem); /* separacion desde el borde del header */
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  z-index: 80;
+  background: rgba(255,255,255,0.6);
+  padding: 4px;
+}
+
+/* Ajuste móvil: menos desplazamiento vertical */
+@media (max-width: 640px) {
+  .site-logo {
+    transform: translateY(0.9rem); /* menor separación en móvil */
+    right: 0.5rem;
+    width: 56px;
+    height: 56px;
+    padding: 2px;
+  }
+}
+
+/* Ajuste pantallas grandes: un poco más abajo si quieres */
+@media (min-width: 1280px) {
+  .site-logo {
+    transform: translateY(2rem);
+    width: 104px;
+    height: 104px;
+  }
+}
+
+/* En pantallas pequeñas la imagen pasa a cover para ocupar bien el fondo */
+@media (max-width: 640px) {
+  .principal-page {
+    background-size: cover;
+    background-position: center;
+    align-items: flex-start;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+/* En pantallas grandes limitar la porción ocupada por la imagen (más discreta) */
+@media (min-width: 1024px) {
+  .principal-page {
+    background-size: 40% auto;
+    background-position: center;
+  }
+}
+
+/* Cinta verde limón en el header (Agua Blanca + menú) */
+.principal-page header {
+  background: linear-gradient(90deg, #f6ffda 0%, #d8f27a 100%) !important; /* verde limón suave */
+  color: #0b3a03 !important; /* texto oscuro para contraste */
+}
+
+/* Asegura que los elementos de texto dentro del header (ej. título) usen color oscuro */
+.principal-page header .text-xl,
+.principal-page header h1,
+.principal-page header button,
+.principal-page header a {
+  color: #0b3a03 !important;
+}
+
+/* Barra del botón hamburguesa: más visible sobre el fondo claro */
+.principal-page header button span {
+  background: #0b3a03 !important;
+}
+
+/* Si hay iconos u otros elementos con fondo blanco, darles contraste ligero */
+.principal-page header .bg-gray-200 {
+  background: rgba(255,255,255,0.9) !important;
+}

@@ -40,19 +40,20 @@ model Usuario {
   nombre   String
   correo   String   @unique
   password String
-  foto     String?  // <-- agrega este campo si no existe
+  foto     String? // <-- agrega este campo si no existe
   creadoEn DateTime @default(now())
   rol      Rol      @default(TURISTA)
 
   emprendedorPerfiles EmprendedorPerfil[] // Relación uno-a-muchos
-  reseñas             Reseña[]           @relation("UsuarioReseñas")
-  favoritos           Favorito[]         // <-- relación inversa agregada
-  redSociales         RedSocial[]        // <-- relación inversa agregada
+  reseñas            Reseña[]           @relation("UsuarioReseñas")
+  favoritos           Favorito[] // <-- relación inversa agregada
+  redSociales         RedSocial[] // <-- relación inversa agregada
+  eventosCreados      Evento[]            @relation("UsuarioEventos") // <-- nuevos eventos creados por el usuario
 }
 
 model EmprendedorPerfil {
   id          Int      @id @default(autoincrement())
-  usuarioId   Int      
+  usuarioId   Int
   nombre      String
   descripcion String?
   telefono    String?
@@ -64,37 +65,37 @@ model EmprendedorPerfil {
 }
 
 model LugarTuristico {
-  id           Int       @id @default(autoincrement())
-  nombre       String
-  descripcion  String?
-  imagen_url   String?   // Foto principal (Cloudinary)
-  latitud      Float?    // <-- aquí la latitud
-  longitud     Float?    // <-- aquí la longitud
-  creadoEn     DateTime  @default(now())
-  direccion    String?   // <-- opcional, para dirección textual
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  imagen_url  String? // Foto principal (Cloudinary)
+  latitud     Float? // <-- aquí la latitud
+  longitud    Float? // <-- aquí la longitud
+  creadoEn    DateTime @default(now())
+  direccion   String? // <-- opcional, para dirección textual
 
   // Nuevo campo: tipo (Turístico o Cultural)
-  tipo         TipoLugar @default(TURISTICO)
+  tipo TipoLugar @default(TURISTICO)
 
   // Agregados: campos para calificaciones (suma y conteo)
-  calificacionTotal    Float   @default(0)
-  numeroCalificaciones Int     @default(0)
+  calificacionTotal    Float @default(0)
+  numeroCalificaciones Int   @default(0)
 
-  reseñas      Reseña[]
-  favoritos    Favorito[] // <-- relación inversa agregada
+  reseñas  Reseña[]
+  favoritos Favorito[] // <-- relación inversa agregada
 }
 
 model Reseña {
-  id         Int           @id @default(autoincrement())
-  lugarId    Int
-  usuarioId  Int
-  comentario String
-  calificacion Int?        // <-- este campo debe existir
-  imagen     String?       // URL Cloudinary
-  creadoEn   DateTime      @default(now())
+  id           Int      @id @default(autoincrement())
+  lugarId      Int
+  usuarioId    Int
+  comentario   String
+  calificacion Int? // <-- este campo debe existir
+  imagen       String? // URL Cloudinary
+  creadoEn     DateTime @default(now())
 
-  lugar      LugarTuristico @relation(fields: [lugarId], references: [id])
-  usuario    Usuario        @relation("UsuarioReseñas", fields: [usuarioId], references: [id])
+  lugar   LugarTuristico @relation(fields: [lugarId], references: [id])
+  usuario Usuario        @relation("UsuarioReseñas", fields: [usuarioId], references: [id])
 }
 
 model Favorito {
@@ -103,46 +104,46 @@ model Favorito {
   lugarId   Int
   creadoEn  DateTime @default(now())
 
-  usuario   Usuario        @relation(fields: [usuarioId], references: [id])
-  lugar     LugarTuristico @relation(fields: [lugarId], references: [id])
+  usuario Usuario        @relation(fields: [usuarioId], references: [id])
+  lugar   LugarTuristico @relation(fields: [lugarId], references: [id])
 }
 
 model Notificacion {
-  id        Int      @id @default(autoincrement())
-  mensaje   String
-  tipo      String   // Ejemplo: "negocio", "evento"
-  fecha     DateTime @default(now())
-  activo    Boolean  @default(true)
+  id      Int      @id @default(autoincrement())
+  mensaje String
+  tipo    String // Ejemplo: "negocio", "evento"
+  fecha   DateTime @default(now())
+  activo  Boolean  @default(true)
 }
 
 model Indicador {
-  id          Int      @id @default(autoincrement())
-  nombre      String
-  categoria   String   // Ejemplo: "Dependiente", "Independiente 1", "Independiente 2"
-  dimension   String   // <-- nuevo campo para la dimensión
-  meta        Float
-  unidad      String?  // Ejemplo: "personas", "interacciones", "puntos"
-  creadoEn    DateTime @default(now())
-  valores     ValorIndicador[]
+  id        Int              @id @default(autoincrement())
+  nombre    String
+  categoria String // Ejemplo: "Dependiente", "Independiente 1", "Independiente 2"
+  dimension String // <-- nuevo campo para la dimensión
+  meta      Float
+  unidad    String? // Ejemplo: "personas", "interacciones", "puntos"
+  creadoEn  DateTime         @default(now())
+  valores   ValorIndicador[]
 }
 
 model ValorIndicador {
-  id            Int      @id @default(autoincrement())
-  indicadorId   Int
-  valorActual   Float
-  fecha         DateTime
+  id          Int       @id @default(autoincrement())
+  indicadorId Int
+  valorActual Float
+  fecha       DateTime
   // Puedes agregar campos como fuente, observaciones, etc.
-  indicador     Indicador @relation(fields: [indicadorId], references: [id])
+  indicador   Indicador @relation(fields: [indicadorId], references: [id])
 }
 
 model RedSocial {
   id        Int      @id @default(autoincrement())
   usuarioId Int
-  nombre    String   // Ejemplo: Facebook, Instagram, etc.
-  link      String   // Link al perfil
+  nombre    String // Ejemplo: Facebook, Instagram, etc.
+  link      String // Link al perfil
   creadoEn  DateTime @default(now())
 
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
 }
 
 model Rating {
@@ -151,11 +152,23 @@ model Rating {
   usuarioId Int
   valor     Int
   creadoEn  DateTime @default(now())
-
-  @@unique([lugarId, usuarioId])
   // Relaciones (opcional según tus modelos)
   // lugar   LugarTuristico @relation(fields: [lugarId], references: [id])
   // usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@unique([lugarId, usuarioId])
+}
+
+model Evento {
+  id        String   @id @default(cuid())
+  title     String
+  date      DateTime
+  creadoPor Int? // referencia opcional al usuario que creó el evento
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relación opcional (ajusta si tu modelo usuario se llama distinto)
+  creador Usuario? @relation("UsuarioEventos", fields: [creadoPor], references: [id])
 }
 
 // Ejemplo de registros para Indicador (agrega estos en Prisma Studio o con un script):
