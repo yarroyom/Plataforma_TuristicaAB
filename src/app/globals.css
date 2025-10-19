@@ -677,7 +677,8 @@ header button {
   backdrop-filter: none !important;
 }
 
-/* Anulaciones específicas para móviles: garantizar texto nítido y fondos opacos */
+/* Anulaciones específicas para móviles: garantizar texto nítido y fondos opacos
+   NOTA: excluimos .login-page y .register-page para preservar sus degradados en móvil */
 @media (max-width: 640px) {
 	/* Forzar texto oscuro y opacidad completa en la mayor parte del DOM */
 	html, body, main, header, nav, footer, section, article, aside,
@@ -691,8 +692,8 @@ header button {
 		-webkit-text-fill-color: #0b2730 !important;
 	}
 
-	/* Asegurar que contenedores y overlays no atenúen el texto */
-	.site-logo, .side-backdrop, .backdrop, .overlay, .dropdown-menu, .login-page::before, .register-page::before {
+	/* Asegurar que overlays no atenúen el texto (excluye pseudo-elementos de login/register) */
+	.site-logo, .side-backdrop, .backdrop, .overlay, .dropdown-menu {
 		opacity: 1 !important;
 		mix-blend-mode: normal !important;
 		filter: none !important;
@@ -700,8 +701,9 @@ header button {
 		pointer-events: none !important;
 	}
 
-	/* Fondos de tarjetas y formularios totalmente opacos para contraste */
-	.card, .bg-white, .dropdown-menu, nav, .side-drawer, .principal-page, .emprendedores-page, .lugares-page, .login-page, .register-page {
+	/* Fondos de tarjetas y la mayoría de componentes totalmente opacos para contraste.
+	   NOTA: no incluimos .login-page ni .register-page aquí para preservar su fondo degradado. */
+	.card, .bg-white, .dropdown-menu, nav, .side-drawer, .principal-page, .emprendedores-page, .lugares-page {
 		background-color: #ffffff !important;
 		background: #ffffff !important;
 		opacity: 1 !important;
