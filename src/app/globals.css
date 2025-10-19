@@ -537,5 +537,60 @@ canvas { max-width: 100% !important; height: 100% !important; }
 
 /* Si hay iconos u otros elementos con fondo blanco, darles contraste ligero */
 .principal-page header .bg-gray-200 {
-  background: rgba(255,255,255,0.9) !important;
+  background: rgba(255,255,255,0.95) !important;
+  color: #0b3a03 !important;
+  opacity: 1 !important;
+}
+
+/* Asegura que el texto del header y del menú desplegable tenga contraste y no aparezca como marca de agua */
+.principal-page header,
+.principal-page header * {
+  color: #0b3a03 !important; /* texto oscuro sobre fondo limón */
+  opacity: 1 !important;
+}
+
+/* Menú desplegable: texto legible y fondo totalmente opaco */
+.dropdown-menu,
+.dropdown-menu a,
+.dropdown-menu button {
+  background: var(--color-background, #fff) !important;
+  color: #0b3a03 !important;
+  opacity: 1 !important;
+}
+
+/* Botones dentro del header (ej. Cuenta, Cerrar sesión) — garantizar contraste */
+.principal-page header .bg-gray-200 {
+  background: rgba(255,255,255,0.95) !important;
+  color: #0b3a03 !important;
+  opacity: 1 !important;
+}
+
+/* Inputs, textarea y selects: texto oscuro, caret visible, fondo blanco */
+input, textarea, select {
+  color: var(--foreground);
+  background: #ffffff;
+  opacity: 1;
+  caret-color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground); /* para navegadores WebKit */
+}
+
+/* Placeholder más visible */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(0,0,0,0.5);
+  opacity: 1;
+}
+
+/* Focus claro para inputs */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(11,58,3,0.08);
+  border-color: rgba(11,58,3,0.25);
+}
+
+/* Asegura que los elementos superpuestos no reduzcan la legibilidad */
+.principal-page .site-logo,
+.principal-page header,
+.dropdown-menu {
+  mix-blend-mode: normal;
 }
