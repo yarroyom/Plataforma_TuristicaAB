@@ -677,50 +677,64 @@ header button {
   backdrop-filter: none !important;
 }
 
-/* Forzar mismas reglas en móviles (anulación específica) */
+/* Anulaciones específicas para móviles: garantizar texto nítido y fondos opacos */
 @media (max-width: 640px) {
-  header,
-  header * {
-    color: #0b3a03 !important;
-    opacity: 1 !important;
-    mix-blend-mode: normal !important;
-    filter: none !important;
-    -webkit-font-smoothing: antialiased !important;
-  }
+	/* Forzar texto oscuro y opacidad completa en la mayor parte del DOM */
+	html, body, main, header, nav, footer, section, article, aside,
+	h1, h2, h3, h4, h5, h6, p, span, a, li, button, label, small, strong {
+		color: #0b2730 !important;
+		opacity: 1 !important;
+		mix-blend-mode: normal !important;
+		filter: none !important;
+		-webkit-font-smoothing: antialiased !important;
+		-moz-osx-font-smoothing: grayscale !important;
+		-webkit-text-fill-color: #0b2730 !important;
+	}
 
-  .site-logo,
-  .dropdown-menu,
-  .dropdown-menu * {
-    opacity: 1 !important;
-    mix-blend-mode: normal !important;
-    filter: none !important;
-  }
+	/* Asegurar que contenedores y overlays no atenúen el texto */
+	.site-logo, .side-backdrop, .backdrop, .overlay, .dropdown-menu, .login-page::before, .register-page::before {
+		opacity: 1 !important;
+		mix-blend-mode: normal !important;
+		filter: none !important;
+		background: transparent !important;
+		pointer-events: none !important;
+	}
 
-  input, textarea, select, .input, .form-control {
-    color: #111827 !important;
-    background: #ffffff !important;
-    opacity: 1 !important;
-    caret-color: #111827 !important;
-    -webkit-text-fill-color: #111827 !important;
-    mix-blend-mode: normal !important;
-  }
+	/* Fondos de tarjetas y formularios totalmente opacos para contraste */
+	.card, .bg-white, .dropdown-menu, nav, .side-drawer, .principal-page, .emprendedores-page, .lugares-page, .login-page, .register-page {
+		background-color: #ffffff !important;
+		background: #ffffff !important;
+		opacity: 1 !important;
+		backdrop-filter: none !important;
+		box-shadow: 0 6px 18px rgba(0,0,0,0.06) !important;
+	}
 
-  input::placeholder,
-  textarea::placeholder {
-    color: rgba(0,0,0,0.6) !important;
-    opacity: 1 !important;
-  }
+	/* Inputs / textarea / selects: texto visible y caret claro */
+	input, textarea, select, .input, .form-control {
+		color: #111827 !important;
+		background: #ffffff !important;
+		opacity: 1 !important;
+		caret-color: #111827 !important;
+		-webkit-text-fill-color: #111827 !important;
+		border-color: rgba(0,0,0,0.08) !important;
+	}
 
-  header .bg-gray-200,
-  header button {
-    background: rgba(255,255,255,0.98) !important;
-    color: #0b3a03 !important;
-  }
+	input::placeholder, textarea::placeholder {
+		color: rgba(0,0,0,0.5) !important;
+		opacity: 1 !important;
+	}
 
-  .side-backdrop,
-  .dropdown-menu,
-  .site-logo {
-    background-blend-mode: normal !important;
-    backdrop-filter: none !important;
-  }
+	/* Enlaces y botones: contraste fuerte */
+	a, button, .btn {
+		color: #064e3b !important;
+		opacity: 1 !important;
+		text-decoration: none !important;
+	}
+
+	/* Aumentar contraste de iconos/labels con clases 'muted' */
+	[class*="muted"], .muted, .text-muted, .subtle {
+		color: #0b2730 !important;
+		opacity: 1 !important;
+	}
 }
+/* { /changed code } */
