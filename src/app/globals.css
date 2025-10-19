@@ -594,3 +594,58 @@ input:focus, textarea:focus, select:focus {
 .dropdown-menu {
   mix-blend-mode: normal;
 }
+
+/* Forzar legibilidad en móviles: anula opacidad, blend-modes y placeholders pálidos */
+@media (max-width: 640px) {
+  /* Header y sus elementos */
+  .principal-page header,
+  .principal-page header * {
+    color: #0b3a03 !important;
+    opacity: 1 !important;
+    mix-blend-mode: normal !important;
+    filter: none !important;
+    -webkit-font-smoothing: antialiased !important;
+  }
+
+  /* Logo y menú desplegable */
+  .principal-page .site-logo,
+  .dropdown-menu,
+  .dropdown-menu * {
+    opacity: 1 !important;
+    mix-blend-mode: normal !important;
+    filter: none !important;
+  }
+
+  /* Inputs / textarea / selects: texto oscuro, fondo blanco, caret visible */
+  input, textarea, select, .input, .form-control {
+    color: #111827 !important;
+    background: #ffffff !important;
+    opacity: 1 !important;
+    caret-color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important; /* WebKit */
+    mix-blend-mode: normal !important;
+  }
+
+  /* Placeholders más visibles */
+  input::placeholder,
+  textarea::placeholder {
+    color: rgba(0,0,0,0.5) !important;
+    opacity: 1 !important;
+  }
+
+  /* Botones del header: asegurar contraste */
+  .principal-page header .bg-gray-200,
+  .principal-page header button {
+    background: rgba(255,255,255,0.96) !important;
+    color: #0b3a03 !important;
+    opacity: 1 !important;
+  }
+
+  /* Evitar que overlays semitransparentes oculten el texto en móviles */
+  .side-backdrop,
+  .dropdown-menu,
+  .site-logo {
+    background-blend-mode: normal !important;
+    backdrop-filter: none !important;
+  }
+}
