@@ -74,17 +74,18 @@ export default function Principal() {
 
   // Eliminar lugar (solo ADMIN)
   const handleEliminar = async (id: number) => {
-    if (
-      !confirm(
-        "¿Confirma eliminar este lugar? Esta acción es irreversible."
-      )
-    )
+    if (!confirm("¿Confirma eliminar este lugar? Esta acción es irreversible."))
       return;
     try {
       const res = await fetch(`/api/lugares/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
+      const body = await (res.headers
+        .get("content-type")
+        ?.includes("application/json")
+        ? res.json()
+        : res.text().then((t) => ({ message: t })));
       if (res.ok) {
         setLugares((prev) => prev.filter((l) => l.id !== id));
         setToast({ mensaje: "Lugar eliminado", visible: true });
@@ -94,8 +95,9 @@ export default function Principal() {
           3000
         );
       } else {
-        const err = await res.json().catch(() => ({ error: "Error" }));
-        alert(err.error || "No se pudo eliminar el lugar");
+        // Mostrar mensaje del servidor si lo hay
+        const errMsg = body?.error || body?.message || "No se pudo eliminar el lugar";
+        alert(`Error: ${errMsg}`);
       }
     } catch (e) {
       alert("Error de conexión");
