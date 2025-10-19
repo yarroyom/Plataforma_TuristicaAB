@@ -37,9 +37,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="login-page flex items-center justify-center min-h-screen">
       <div className="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-2xl">
-        <h2 className="text-2xl font-bold text-center text-gray-800">Iniciar Sesión</h2>
+        {/* Imagen arriba del formulario */}
+        <img
+          src="/images/lugares/AB.jpeg"
+          alt="Logo Agua Blanca"
+          className="mx-auto w-24 h-24 object-cover rounded-md mb-3"
+        />
+        <h2 className="text-2xl font-bold text-center text-gray-800">
+          Iniciar Sesión
+        </h2>
 
         {error && <p className="text-red-500 text-center">{error}</p>}
 
@@ -63,10 +71,21 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
             {loading ? "Ingresando..." : "Entrar"}
           </button>
+
+          {/* Opción de registro debajo del botón */}
+          <div className="text-center mt-3">
+            <span className="text-sm text-gray-600">¿No tienes cuenta?</span>{" "}
+            <a
+              href="/register"
+              className="text-sm text-green-600 hover:underline"
+            >
+              Regístrate
+            </a>
+          </div>
         </form>
       </div>
     </div>

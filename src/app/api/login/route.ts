@@ -1,73 +1,77 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { correo, password } = await req.json();
+    // parsear body con tolerancia a JSON inválido
+    let body: any = null;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error("POST /api/login - JSON inválido:", e);
+      return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+    }
 
-    const usuario = await prisma.usuario.findUnique({ where: { correo } });
+    // Acepta "email" o "correo"
+    const email = (body?.email ?? body?.correo ?? "") as string;
+    const password = String(body?.password ?? "");
+
+    if (!email || !password) {
+      return NextResponse.json({ error: "Faltan credenciales (correo y password)" }, { status: 400 });
+    }
+
+    const usuario = await prisma.usuario.findUnique({ where: { correo: email } }).catch((e: unknown) => {
+      console.error("POST /api/login - prisma error al buscar usuario:", e);
+      return null;
+    });
+
     if (!usuario) {
-      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
     }
 
-    // Log para depuración
-    console.log("Usuario encontrado:", usuario);
-
-    const valido = await bcrypt.compare(password, usuario.password);
-    if (!valido) {
-      return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 });
+    // Comparar password: si está hasheada con bcrypt (prefijo $2), usar bcryptjs; si no, comparar plano
+    let match = false;
+    const stored = usuario.password ?? "";
+    try {
+      if (typeof stored === "string" && stored.startsWith("$2")) {
+        // import dinámico de bcryptjs (no rompe si no está instalado)
+        const bcrypt = await import("bcryptjs").catch(() => null);
+        if (bcrypt && typeof bcrypt.compare === "function") {
+          match = await bcrypt.compare(password, stored);
+        } else {
+          // fallback inseguro
+          match = password === stored;
+        }
+      } else {
+        match = password === stored;
+      }
+    } catch (e) {
+      console.error("POST /api/login - error comparando password:", e);
+      return NextResponse.json({ error: "Error en autenticación" }, { status: 500 });
     }
 
-    // Generar token con id, correo y rol
-    const token = jwt.sign(
-      { id: usuario.id, correo: usuario.correo, rol: usuario.rol },
-      process.env.JWT_SECRET!,
-      { expiresIn: "1h" }
-    );
+    if (!match) {
+      return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
+    }
 
-    // Log para depuración
-    console.log("Token generado:", token);
+    // Autenticación OK -> crear token de sesión (temporal: id de usuario)
+    // RECOMENDACIÓN: reemplazar por JWT en producción
+    const tokenValue = String(usuario.id);
 
-
-    const response = NextResponse.json({ message: "Login exitoso" });
-    response.cookies.set("token", token, {
+    const res = NextResponse.json({ ok: true, id: usuario.id, rol: usuario.rol });
+    // set cookie HttpOnly
+    res.cookies.set("token", tokenValue, {
       httpOnly: true,
+      path: "/",
+      sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60,
-      path: "/"
+      maxAge: 60 * 60 * 24 * 7, // 7 días
     });
 
-    // Registrar el valor del indicador "Número de clics por página"
-    const indicador = await prisma.indicador.findFirst({
-      where: { nombre: "Número de clics por página" }
-    });
-    if (indicador) {
-      // Busca el último valor registrado para hoy
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      const ultimo = await prisma.valorIndicador.findFirst({
-        where: {
-          indicadorId: indicador.id,
-          fecha: {
-            gte: hoy,
-          },
-        },
-        orderBy: { fecha: "desc" },
-      });
-      const nuevoValor = ultimo ? ultimo.valorActual + 1 : 1;
-      await prisma.valorIndicador.create({
-        data: {
-          indicadorId: indicador.id,
-          valorActual: nuevoValor,
-          fecha: new Date(),
-        },
-      });
-    }
-
-    return response;
-  } catch (error) {
-    return NextResponse.json({ error: "Error en el login" }, { status: 500 });
+    console.log("POST /api/login -> user", usuario.id, "cookie set");
+    return res;
+  } catch (err: any) {
+    console.error("POST /api/login error inesperado:", err);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

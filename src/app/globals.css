@@ -373,6 +373,36 @@ canvas { max-width: 100% !important; height: 100% !important; }
   .side-drawer.open { width: 320px; }
 }
 
+/* Fondo degradado para la página de login (amarillo -> verde) */
+.login-page {
+  background: linear-gradient(135deg,
+    #fef08a 0%,   /* amarillo suave */
+    #fff8b5 30%,
+    #dcfce7 70%,  /* verde muy claro */
+    #d1fae5 100%  /* verde suave */
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  min-height: 100vh;
+}
+
+/* Opcional: overlay sutil para bajar brillo si se quiere (ajustar opacity) */
+.login-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.02));
+  z-index: 1;
+}
+
+/* Asegurar que el contenedor del formulario esté por encima del overlay */
+.login-page > * {
+  position: relative;
+  z-index: 2;
+}
+
 /* Fondo verde limón para la página de reseñas */
 .resenas-page {
   background: linear-gradient(180deg, #e7ffd2 0%, #c9f07a 100%); /* verde limón suave */
@@ -692,74 +722,5 @@ header button {
   .site-logo {
     background-blend-mode: normal !important;
     backdrop-filter: none !important;
-  }
-}
-
-/* Móvil: forzar alto contraste y eliminar efectos que atenúan texto */
-@media (max-width: 640px) {
-  /* Forzar texto oscuro y opacidad completa en prácticamente todo el contenido */
-  body, main, header, nav, footer, section, article, aside,
-  h1,h2,h3,h4,h5,h6, p, span, a, li, button, label, small, strong {
-    color: #0b2730 !important;        /* color bien oscuro */
-    opacity: 1 !important;            /* eliminar cualquier atenuación */
-    mix-blend-mode: normal !important;
-    filter: none !important;
-    -webkit-font-smoothing: antialiased !important;
-    -moz-osx-font-smoothing: grayscale !important;
-  }
-
-  /* Asegurar que tarjetas, listados y menús tengan fondo opaco */
-  .card, .bg-white, .dropdown-menu, nav, .side-drawer, .principal-page, .emprendedores-page, .lugares-page {
-    background-color: #ffffff !important;
-    background: #ffffff !important;
-    opacity: 1 !important;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06) !important;
-    mix-blend-mode: normal !important;
-    backdrop-filter: none !important;
-  }
-
-  /* Menú desplegable: texto legible y fondo sólido */
-  .dropdown-menu,
-  .dropdown-menu a,
-  .dropdown-menu button {
-    background: #ffffff !important;
-    color: #0b2730 !important;
-    opacity: 1 !important;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important;
-  }
-
-  /* Inputs / textarea / selects: texto visible y caret claro */
-  input, textarea, select, .input, .form-control {
-    color: #111827 !important;
-    background: #ffffff !important;
-    opacity: 1 !important;
-    caret-color: #111827 !important;
-    -webkit-text-fill-color: #111827 !important;
-    border-color: rgba(0,0,0,0.08) !important;
-  }
-  input::placeholder, textarea::placeholder {
-    color: rgba(0,0,0,0.48) !important;
-    opacity: 1 !important;
-  }
-
-  /* Enlaces y botones: contraste fuerte */
-  a, button, .btn {
-    color: #064e3b !important;
-    opacity: 1 !important;
-    text-decoration: none !important;
-  }
-
-  /* Evitar que iconos o overlays reduzcan legibilidad */
-  .site-logo, .side-backdrop, .backdrop, .overlay {
-    opacity: 1 !important;
-    mix-blend-mode: normal !important;
-    background: transparent !important;
-    filter: none !important;
-  }
-
-  /* Si hay textos semitransparentes por clases específicas, restarlas aquí */
-  [class*="muted"], .muted, .text-muted, .subtle {
-    color: #0b2730 !important;
-    opacity: 1 !important;
   }
 }
