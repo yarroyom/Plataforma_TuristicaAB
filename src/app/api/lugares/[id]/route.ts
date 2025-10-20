@@ -28,9 +28,12 @@ async function getUserIdFromReq(req: NextRequest): Promise<number | null> {
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: any) {
   try {
+    // El objeto `context.params` puede ser una Promise en App Router; hay que await params específicamente
+    const params = await context.params;
     const lugarId = Number(params.id);
+
     if (!Number.isFinite(lugarId) || lugarId <= 0) {
       return NextResponse.json({ error: "ID de lugar inválido" }, { status: 400 });
     }
