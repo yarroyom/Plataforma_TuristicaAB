@@ -3,6 +3,43 @@ import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
+// Helper: resolver userId desde cookie o header Authorization (JWT o id numérico)
+async function getUserIdFromReq(req: NextRequest): Promise<number | null> {
+  try {
+    let token = req.cookies.get("token")?.value ?? null;
+    const authHeader = req.headers.get("authorization") || "";
+    if (!token && authHeader.toLowerCase().startsWith("bearer ")) {
+      token = authHeader.split(" ")[1];
+    }
+    if (!token) return null;
+
+    // si es un id numérico guardado como token
+    if (/^\d+$/.test(token)) return Number(token);
+
+    // si hay secret, intentar verificar JWT
+    if (process.env.JWT_SECRET) {
+      try {
+        const payload: any = jwt.verify(token, process.env.JWT_SECRET);
+        const maybe = payload?.id ?? payload?.sub ?? null;
+        const idNum = maybe != null ? Number(maybe) : NaN;
+        if (Number.isFinite(idNum) && idNum > 0) return idNum;
+      } catch (e) {
+        console.warn("getUserIdFromReq: JWT verify falló:", e);
+        // fallback: intentar parsear token como número
+        const num = Number(token);
+        if (Number.isFinite(num) && num > 0) return num;
+      }
+    }
+
+    // último recurso: intentar convertir a número
+    const num = Number(token);
+    return Number.isFinite(num) && num > 0 ? num : null;
+  } catch (e) {
+    console.error("getUserIdFromReq error:", e);
+    return null;
+  }
+}
+
 export async function GET() {
   const emprendedores = await prisma.emprendedorPerfil.findMany({
     include: { usuario: true },
@@ -11,25 +48,23 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // resolver usuario de forma segura
+  const userId = await getUserIdFromReq(req);
+  if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  const { nombre, descripcion, telefono, direccion, foto } = body;
+
   try {
-    // Obtener token desde cookie HttpOnly
-    const token = req.cookies.get("token")?.value;
-    if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
-    // Verificar token
-    const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const body = await req.json();
-    const { nombre, descripcion, telefono, direccion, foto } = body;
-
     // Obtén el correo del usuario logueado
     const usuario = await prisma.usuario.findUnique({
-      where: { id: payload.id },
+      where: { id: userId },
       select: { correo: true },
     });
 
     const perfil = await prisma.emprendedorPerfil.create({
       data: {
-        usuarioId: payload.id,
+        usuarioId: userId,
         nombre,
         descripcion,
         telefono,

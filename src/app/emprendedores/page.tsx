@@ -98,8 +98,9 @@ export default function EmprendedoresPage() {
 
               return (
                 <div key={e.id} className="bg-white rounded-lg shadow p-4 flex items-start gap-4">
+                  {/* Evitar pasar "" a src: usar foto solo si tiene contenido */}
                   <img
-                    src={e.foto ?? "/images/lugares/AB.jpeg"}
+                    src={(typeof e.foto === "string" && e.foto.trim()) ? e.foto : "/images/lugares/AB.jpeg"}
                     alt={e.nombre}
                     className="w-24 h-24 object-cover rounded-md"
                   />
