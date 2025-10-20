@@ -2,8 +2,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+ /** Comprueba rápidamente si la BD responde (timeout en ms) */
+async function checkDbAvailable(timeoutMs = 1500): Promise<boolean> {
+  try {
+    // Ejecuta una consulta muy ligera; si falla o tarda más del timeout consideramos la BD no disponible
+    const op = (prisma as any).$queryRaw`SELECT 1` as Promise<any>;
+    const to = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), timeoutMs));
+    await Promise.race([op, to]);
+    return true;
+  } catch (e) {
+    console.warn("DB availability check failed:", e?.message ?? e);
+    return false;
+  }
+}
+
 export async function GET(req: NextRequest) {
-	try {
+ 	try {
+		// Logs básicos para diagnóstico en Deployments
+		console.log("GET /api/me - env DB present?", !!process.env.DATABASE_URL, "NODE_ENV=", process.env.NODE_ENV);
+
+		// Si la BD no responde en un tiempo corto, devolvemos 503 indicando degradación
+		const dbOk = await checkDbAvailable(1500);
+		if (!dbOk) {
+			console.error("GET /api/me - DB no disponible (timeout). Retornando 503.");
+			return NextResponse.json(
+				{ error: "Servicio temporalmente degradado. Intenta de nuevo más tarde." },
+				{ status: 503, headers: { "Retry-After": "30" } }
+			);
+		}
+
 		// Intentar obtener token desde cookies
 		const cookieToken = req.cookies.get("token")?.value ?? null;
 		// También aceptar Authorization Bearer como fallback
