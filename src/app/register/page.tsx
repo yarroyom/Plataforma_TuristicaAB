@@ -25,13 +25,20 @@ export default function RegisterPage() {
     }
     setLoading(true);
 
+    // timeout para la petición (evita esperar indefinidamente si la función serverless falla)
+    const controller = new AbortController();
+    const timeoutMs = 8000; // 8 segundos (ajusta según necesites)
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
@@ -49,9 +56,15 @@ export default function RegisterPage() {
       } else {
         setMsg(data.error || "Error al registrar usuario");
       }
-    } catch (err) {
-      console.error(err);
-      setMsg("Error del servidor");
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      if (err.name === "AbortError") {
+        // petición abortada por timeout
+        setMsg("El servidor tardó demasiado. Intenta de nuevo más tarde.");
+      } else {
+        console.error(err);
+        setMsg("Error del servidor");
+      }
     } finally {
       setLoading(false);
     }
