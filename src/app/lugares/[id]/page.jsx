@@ -52,10 +52,29 @@ export default function LugarDetalle() {
         if (Array.isArray(data)) setResenas(data);
       });
     // Verifica si el lugar es favorito en la base de datos
-    fetch(`/api/favoritos`, { credentials: "include" })
+    fetch("/api/favoritos", { credentials: "include" })
       .then(res => res.json())
       .then(data => {
-        setEsFavorito(data.some(l => l.id === Number(id)));
+        // data puede ser:
+        // - array de lugares: [{ id, nombre, ... }, ...]
+        // - array de favoritos: [{ id, usuarioId, lugar: { id, nombre, ... } }, ...]
+        // - o forma inesperada -> proteger
+        let isFav = false;
+        if (Array.isArray(data)) {
+          isFav = data.some(item => {
+            // si es favorito con relación 'lugar'
+            if (item && typeof item === "object") {
+              const lid = item.lugar?.id ?? item.id ?? item.lugarId ?? null;
+              return Number(lid) === Number(id);
+            }
+            return false;
+          });
+        }
+        setEsFavorito(Boolean(isFav));
+      })
+      .catch(err => {
+        console.warn("No se pudo comprobar favorito:", err);
+        setEsFavorito(false);
       });
     // Obtener la calificación del usuario logueado para este lugar
     fetch(`/api/resenas?lugarId=${id}&usuarioId=${usuarioLogueado.id}`, { credentials: "include" })

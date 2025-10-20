@@ -4,6 +4,23 @@
   --background: #ffffff;
   --foreground: #171717;
   --font-size-base: 16px;
+  --grad-amarillo: rgba(250, 204, 21, 0.18);
+  --grad-amarillo-claro: rgba(254, 243, 199, 0.12);
+  --grad-verde: rgba(220, 252, 231, 0.18);
+}
+
+/* Paleta y tokens para aspecto profesional */
+:root {
+  --brand-green-600: #059669;
+  --brand-green-500: #10b981;
+  --brand-yellow-500: #f59e0b;
+  --text-primary: #0b3a03;
+  --muted: #6b7280;
+  --card-bg: rgba(255,255,255,0.98);
+  --glass-border: rgba(11,58,3,0.06);
+  --elevation-1: 0 6px 18px rgba(6,30,12,0.06);
+  --elevation-2: 0 18px 40px rgba(6,30,12,0.12);
+  --transition-fast: 180ms cubic-bezier(.2,.9,.3,1);
 }
 
 :root {
@@ -106,76 +123,122 @@ canvas { max-width: 100% !important; height: 100% !important; }
 /* Negocios / emprendedores: imágenes y tarjetas responsivas */
 /* Usa class="negocio-card" en el contenedor y class="negocio-image" en la <img> del negocio */
 
+/* Tarjeta de negocio - diseño profesional y limpio */
 .negocio-card {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.75rem; /* compacto */
-  border-radius: 6px;
-  background: var(--color-background);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  gap: 1rem;
+  align-items: stretch;
+  padding: 1rem;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--elevation-1);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+  position: relative;
+  overflow: hidden;
 }
 
+/* Elevación y claridad al hover */
+.negocio-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--elevation-2);
+  border-color: rgba(6,78,59,0.10);
+}
+
+/* Imagen con ratio fijo y cover */
 .negocio-image {
-  width: 220px;
-  height: 140px;
+  width: 160px;
+  min-width: 160px;
+  height: 120px;
   object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.04);
+  flex-shrink: 0;
+  background: linear-gradient(180deg,#f8fff5,#ffffff);
+}
+
+/* Contenido: claro, jerarquía tipográfica */
+.negocio-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+}
+.negocio-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.negocio-meta {
+  display:flex;
+  gap:0.5rem;
+  align-items:center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.negocio-desc {
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Actions alineadas a la derecha/bottom */
+.negocio-actions {
+  display:flex;
+  gap:0.5rem;
+  margin-top: auto;
+  align-items: center;
+}
+
+/* Small controls */
+.negocio-actions .btn {
+  padding: 0.38rem 0.6rem;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+
+/* Badge discreto */
+.negocio-badge {
+  font-size: 0.75rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(250,204,21,0.12), rgba(220,252,231,0.10));
+  color: var(--brand-green-600);
+  border: 1px solid rgba(6,78,59,0.06);
+}
+
+/* Ribbon opcional, discreto y profesional */
+.corner-ribbon {
+  position: absolute;
+  top: 10px;
+  right: -36px;
+  width: 140px;
+  text-align: center;
+  transform: rotate(45deg);
+  background: linear-gradient(90deg,var(--brand-yellow-500), var(--brand-green-500));
+  color: #fff;
+  padding: 6px 0;
+  font-weight:700;
+  font-size: 0.78rem;
   border-radius: 6px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
 }
 
-/* Pantallas pequeñas: reducir imagenes y padding */
+/* responsive: columna en móvil */
 @media (max-width: 640px) {
-  .negocio-card {
-    padding: 0.4rem;
-  }
-  .negocio-image {
-    width: 96px;
-    height: 64px;
-  }
-  .negocio-card .titulo-negocio {
-    font-size: 0.85rem;
-  }
-}
-
-/* Pantallas intermedias: tamaño medio */
-@media (min-width: 641px) and (max-width: 1024px) {
-  .negocio-card {
-    padding: 0.6rem;
-  }
-  .negocio-image {
-    width: 140px;
-    height: 90px;
-  }
-  .negocio-card .titulo-negocio {
-    font-size: 0.95rem;
-  }
-}
-
-/* Desktop: compacto pero legible */
-@media (min-width: 1025px) {
-  .negocio-card {
-    padding: 0.75rem;
-  }
-  .negocio-image {
-    width: 200px;
-    height: 120px;
-  }
-  .negocio-card .titulo-negocio {
-    font-size: 1rem;
-  }
-}
-
-/* Opcional: hace que las tarjetas quepan mejor en grid */
-.grid-negocios {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0,1fr));
-  gap: 0.75rem;
-}
-@media (min-width: 640px) {
-  .grid-negocios { grid-template-columns: repeat(2, minmax(0,1fr)); }
-}
-@media (min-width: 1024px) {
-  .grid-negocios { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .negocio-card { flex-direction: column; gap: 0.6rem; }
+  .negocio-image { width: 100%; height: 160px; min-width: auto; border-radius: 8px; }
+  .corner-ribbon { display:none; }
 }
 
 /* Dropdown lateral: el contenedor debe tener class="dropdown" y el menú class="dropdown-menu" */
@@ -371,6 +434,52 @@ canvas { max-width: 100% !important; height: 100% !important; }
 @media (min-width: 1024px) {
   .side-drawer { max-width: 360px; }
   .side-drawer.open { width: 320px; }
+}
+
+/* Variables reutilizables para degradado amarillo -> verde */
+:root {
+  --grad-amarillo: rgba(250, 204, 21, 0.18);
+  --grad-amarillo-claro: rgba(254, 243, 199, 0.12);
+  --grad-verde: rgba(220, 252, 231, 0.18);
+}
+
+/* Clase utilitaria: degradado amarillo -> verde (reusable) */
+.bg-degradado-amarillo-verde {
+  background: linear-gradient(135deg,
+    var(--grad-amarillo) 0%,
+    var(--grad-amarillo-claro) 40%,
+    var(--grad-verde) 100%
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Aplicar el mismo degradado a las páginas relevantes */
+.login-page,
+.register-page,
+.emprendedores-page {
+  /* Mantener la posibilidad de sobrescribir con una clase específica si hace falta */
+  background: linear-gradient(135deg,
+    var(--grad-amarillo) 0%,
+    var(--grad-amarillo-claro) 40%,
+    var(--grad-verde) 100%
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Asegurar que el formulario (bg-white) esté por encima del fondo */
+.login-page > div,
+.register-page > div,
+.emprendedores-page > div {
+  position: relative;
+  z-index: 2;
 }
 
 /* Fondo degradado para la página de login (amarillo -> verde) */
@@ -739,4 +848,47 @@ header button {
 		opacity: 1 !important;
 	}
 }
-/* { /changed code } */
+
+/* Fondo degradado para la página de emprendedores (amarillo -> verde) */
+.emprendedores-page {
+  background: linear-gradient(135deg,
+    rgba(250,204,21,0.18) 0%,   /* amarillo suave */
+    rgba(254,243,199,0.12) 40%,
+    rgba(220,252,231,0.18) 80%, /* verde suave */
+    rgba(209,250,229,0.14) 100%
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  min-height: 100vh;
+  /* opcional: ligera capa de blur como marca de agua */
+  position: relative;
+}
+
+/* Si tienes pseudo-elementos decorativos, evita que las reglas móviles los anulen.
+   Asegúrate de que en el bloque @media (max-width:640px) no esté incluida .emprendedores-page
+   en la lista que fuerza fondo blanco. */
+
+/* Fondo degradado para el bloque de formulario de reseñas (amarillo -> verde) */
+.resena-page {
+  background: linear-gradient(135deg,
+    var(--grad-amarillo, rgba(250,204,21,0.18)) 0%,
+    var(--grad-amarillo-claro, rgba(254,243,199,0.12)) 30%,
+    var(--grad-verde, rgba(220,252,231,0.18)) 100%
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+/* Estilo del formulario dentro del bloque: fondo blanco y sombra para contraste */
+.resena-page > form,
+.resena-form {
+  background: #ffffff !important;
+  padding: 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(6,30,12,0.08);
+  border: 1px solid rgba(0,0,0,0.04);
+}

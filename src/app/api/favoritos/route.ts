@@ -1,21 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
+import type { Favorito } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
-  let token = req.cookies.get("token")?.value;
-  if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
+  try {
+    // obtener token desde cookie o header Authorization
+    let token = req.cookies.get("token")?.value ?? null;
+    const authHeader = req.headers.get("authorization") || "";
+    if (!token && authHeader.toLowerCase().startsWith("bearer ")) {
+      token = authHeader.split(" ")[1];
+    }
 
-  const favoritos = await prisma.favorito.findMany({
-    where: { usuarioId: payload.id },
-    include: { lugar: true },
-    orderBy: { creadoEn: "desc" },
-  });
+    // Resolver userId de forma robusta: número puro o payload JWT
+    let userId: number | null = null;
 
-  return NextResponse.json(
-    favoritos.map((f: { lugar: any }) => f.lugar)
-  );
+    if (token) {
+      // caso: token es número (id almacenado como token)
+      if (/^\d+$/.test(token)) {
+        userId = Number(token);
+      } else if (process.env.JWT_SECRET) {
+        try {
+          const payload: any = jwt.verify(token, process.env.JWT_SECRET);
+          const maybe = payload?.id ?? payload?.sub ?? null;
+          if (maybe != null) {
+            const idNum = Number(maybe);
+            if (Number.isFinite(idNum) && idNum > 0) userId = idNum;
+          }
+        } catch (err) {
+          console.warn("JWT verify falló (GET /api/favoritos):", err);
+          // no retornamos error, dejamos userId = null para devolver [] más abajo
+        }
+      } else {
+        // Si no hay JWT_SECRET intentamos interpretar token como id numérico
+        const num = Number(token);
+        if (Number.isFinite(num) && num > 0) userId = num;
+      }
+    }
+
+    // Si no hay usuario válido, devolvemos array vacío para que la UI no falle
+    if (!userId) {
+      return NextResponse.json([]);
+    }
+
+    // obtener favoritos del usuario (incluyendo datos del lugar)
+    const favoritos: Array<Favorito & { lugar: any | null }> = await prisma.favorito.findMany({
+      where: { usuarioId: userId },
+      include: { lugar: true },
+      orderBy: { id: "desc" },
+    });
+    // Devolver solo los lugares para facilitar el render en frontend
+    return NextResponse.json(favoritos.map((f) => f.lugar));
+  } catch (err) {
+    console.error("GET /api/favoritos error:", err);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {

@@ -10,10 +10,10 @@ interface Emprendedor {
   telefono?: string;
   direccion?: string;
   foto?: string;
-  usuario: { id: number; correo: string; nombre: string; rol: string };
+  usuario?: { id: number; correo: string; nombre: string; rol: string };
 }
 
-export default function ListaEmprendedores() {
+export default function EmprendedoresPage() {
   const [emprendedores, setEmprendedores] = useState<Emprendedor[]>([]);
   const [usuarioLogueado, setUsuarioLogueado] = useState<{ id: number; rol: string } | null>(null);
   const router = useRouter();
@@ -25,23 +25,19 @@ export default function ListaEmprendedores() {
         const res = await fetch("/api/me", { credentials: "include" });
         const data = await res.json();
 
-        // Log para depuración
-        console.log("Respuesta /api/me:", data);
-
         if (data.error) {
-          console.log("Redirigiendo a login por error:", data.error);
-          router.push("/login"); // Redirige si no hay token válido
+          router.push("/login");
         } else {
           setUsuarioLogueado({ id: data.id, rol: data.rol.toUpperCase() });
         }
       } catch (err) {
-        console.log("Error en fetchUsuario:", err);
+        console.error("Error en fetchUsuario:", err);
         router.push("/login");
       }
     };
 
     fetchUsuario();
-  }, []);
+  }, [router]);
 
   // Traer lista de emprendedores
   useEffect(() => {
@@ -49,9 +45,10 @@ export default function ListaEmprendedores() {
       try {
         const res = await fetch("/api/emprendedores");
         const data = await res.json();
-        setEmprendedores(data);
+        setEmprendedores(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
+        setEmprendedores([]);
       }
     };
 
@@ -61,67 +58,86 @@ export default function ListaEmprendedores() {
   if (!usuarioLogueado) return <div>Verificando usuario...</div>;
 
   return (
-    <div className="p-8">
-      <button
-        className="text-blue-600 underline mb-4"
-        onClick={() => router.push("/principal")}
-      >
-        ← Regresar
-      </button>
-      <h1 className="text-2xl font-bold mb-4">Emprendedores</h1>
-
-      {/* Nuevo Perfil solo para EMPRENDEDOR */}
-      {usuarioLogueado.rol === "EMPRENDEDOR" && (
+    <div className="emprendedores-page py-8">
+      <div className="container">
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-          onClick={() => router.push("/emprendedores/nuevo")}
+          onClick={() => router.push("/principal")}
+          className="text-sm inline-block mb-4 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
         >
-          Nuevo Perfil
+          ← Regresar
         </button>
-      )}
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Emprendedores</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {emprendedores.map(e => {
-          const esPropietario =
-            usuarioLogueado.rol === "EMPRENDEDOR" && usuarioLogueado.id === e.usuario.id;
-          const esAdmin = usuarioLogueado.rol === "ADMIN";
+        {/* Controles: sólo visibles para usuarios con rol EMPRENDEDOR */}
+        {usuarioLogueado.rol === "EMPRENDEDOR" && (
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+              onClick={() => router.push("/emprendedores/nuevo")}
+            >
+              Nuevo Perfil
+            </button>
 
-          return (
-            <div key={e.id} className="border p-4 rounded shadow hover:shadow-lg transition">
-              <h2 className="font-semibold text-lg">{e.nombre}</h2>
-              {e.foto && <img src={e.foto} alt={e.nombre} className="w-full h-40 object-cover mt-2 mb-2 rounded" />}
-              <p>{e.descripcion}</p>
-              <p className="text-sm">Tel: {e.telefono}</p>
-              <p className="text-sm">Dirección: {e.direccion}</p>
-              <p className="text-sm">Usuario: {e.usuario.nombre} ({e.usuario.correo})</p>
+            <button
+              className="bg-gray-800 text-white px-3 py-2 rounded hover:bg-gray-700"
+              onClick={() => router.push("/emprendedores/mis-perfiles")}
+            >
+              Mis perfiles
+            </button>
+          </div>
+        )}
 
-              <div className="flex gap-2 mt-2">
-                <button
-                  className="bg-green-500 text-white px-2 py-1 rounded"
-                  onClick={() => router.push(`/emprendedores/${e.id}/ver`)}
-                >
-                  Ver Perfil
-                </button>
-                {(esPropietario || esAdmin) && (
-                  <>
-                    <button
-                      className="bg-yellow-500 text-white px-2 py-1 rounded"
-                      onClick={() => router.push(`/emprendedores/${e.id}/editar`)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="bg-red-500 text-white px-2 py-1 rounded"
-                      onClick={() => router.push(`/emprendedores/${e.id}/eliminar`)}
-                    >
-                      Eliminar
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {emprendedores.length === 0 ? (
+          <p className="text-gray-600">No hay emprendedores registrados.</p>
+        ) : (
+          <div className="space-y-4">
+            {emprendedores.map((e) => {
+              const canEdit =
+                usuarioLogueado!.rol === "ADMIN" ||
+                (usuarioLogueado!.rol === "EMPRENDEDOR" && usuarioLogueado!.id === e.usuario?.id);
+
+              return (
+                <div key={e.id} className="bg-white rounded-lg shadow p-4 flex items-start gap-4">
+                  <img
+                    src={e.foto ?? "/images/lugares/AB.jpeg"}
+                    alt={e.nombre}
+                    className="w-24 h-24 object-cover rounded-md"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold truncate">{e.nombre}</h3>
+                    {e.descripcion && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{e.descripcion}</p>}
+
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200"
+                        onClick={() => router.push(`/emprendedores/${e.id}/ver`)}
+                      >
+                        Ver Perfil
+                      </button>
+
+                      {canEdit && (
+                        <>
+                          <button
+                            className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                            onClick={() => router.push(`/emprendedores/${e.id}/editar`)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                            onClick={() => router.push(`/emprendedores/${e.id}/eliminar`)}
+                          >
+                            Eliminar
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

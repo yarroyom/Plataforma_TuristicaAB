@@ -2,6 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
+async function getUserIdFromReq(req: NextRequest): Promise<number | null> {
+  try {
+    let token = req.cookies.get("token")?.value ?? null;
+    const authHeader = req.headers.get("authorization") || "";
+    if (!token && authHeader.toLowerCase().startsWith("bearer ")) {
+      token = authHeader.split(" ")[1];
+    }
+    if (!token) return null;
+
+    // token ya es id numérico
+    if (/^\d+$/.test(token)) return Number(token);
+
+    // si hay JWT_SECRET intentar verificar
+    if (process.env.JWT_SECRET) {
+      try {
+        const payload: any = jwt.verify(token, process.env.JWT_SECRET);
+        const maybe = payload?.id ?? payload?.sub ?? null;
+        const idNum = maybe != null ? Number(maybe) : NaN;
+        if (Number.isFinite(idNum) && idNum > 0) return idNum;
+      } catch (e) {
+        console.warn("getUserIdFromReq: JWT verify falló:", e);
+      }
+    }
+
+    // fallback: intentar convertir a número
+    const num = Number(token);
+    return Number.isFinite(num) && num > 0 ? num : null;
+  } catch (e) {
+    console.error("getUserIdFromReq error:", e);
+    return null;
+  }
+}
+
 export async function GET(req: Request) {
   try {
     const token = req.headers.get('cookie')?.split('; ')
@@ -30,38 +63,64 @@ export async function GET(req: Request) {
   }
 }
 
+/* { changed code } */
 export async function PUT(req: NextRequest) {
-  let token = req.cookies.get("token")?.value;
-  if (!token) {
-    const authHeader = req.headers.get("authorization");
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      token = authHeader.replace("Bearer ", "");
-    }
-  }
-  if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   try {
-    const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const body = await req.json();
-    const data: any = {};
-
-    // Permite eliminar la foto si el valor es ""
-    if ("foto" in body) data.foto = body.foto;
-
-    if (body.password) {
-      // ...existing code para cambiar contraseña...
+    const userId = await getUserIdFromReq(req);
+    if (!userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    await prisma.usuario.update({
-      where: { id: payload.id },
-      data,
+    const body = await req.json().catch(() => ({}));
+    // Aceptar campos comunes: nombre, correo, telefono, foto, descripcion (ajusta según tu modelo)
+    const nombre = typeof body.nombre === "string" ? body.nombre.trim() : undefined;
+    const correo = typeof body.correo === "string" ? body.correo.trim() : undefined;
+    const telefono = typeof body.telefono === "string" ? body.telefono.trim() : undefined;
+    const foto = typeof body.foto === "string" ? body.foto.trim() : undefined;
+    const descripcion = typeof body.descripcion === "string" ? body.descripcion.trim() : undefined;
+
+    const updates: any = {};
+    if (typeof nombre === "string" && nombre.length) updates.nombre = nombre;
+    if (typeof correo === "string" && correo.length) updates.correo = correo;
+    if (typeof telefono === "string") updates.telefono = telefono;
+    if (typeof foto === "string") updates.foto = foto;
+    if (typeof descripcion === "string") updates.descripcion = descripcion;
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "Nada para actualizar" }, { status: 400 });
+    }
+
+    // validar existencia del usuario
+    const usuarioExistente = await prisma.usuario.findUnique({ where: { id: userId } });
+    if (!usuarioExistente) {
+      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    }
+
+    // prevenir cambios no permitidos (por ejemplo rol, password) -- no incluimos esos campos en updates
+
+    // actualizar en DB
+    const actualizado = await prisma.usuario.update({
+      where: { id: userId },
+      data: updates,
     });
 
-    return NextResponse.json({ message: "Perfil actualizado" });
+    // devolver datos públicos
+    const publico = {
+      id: actualizado.id,
+      nombre: actualizado.nombre,
+      correo: actualizado.correo,
+      telefono: actualizado.telefono ?? null,
+      foto: actualizado.foto ?? null,
+      descripcion: actualizado.descripcion ?? null,
+    };
+
+    return NextResponse.json({ ok: true, perfil: publico });
   } catch (err) {
+    console.error("PUT /api/perfil error:", err);
     return NextResponse.json({ error: "Error al actualizar perfil" }, { status: 500 });
   }
 }
+/* { /changed code } */
 
 export async function DELETE(req: NextRequest) {
   let token = req.cookies.get("token")?.value;

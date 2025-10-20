@@ -57,40 +57,55 @@ export default function FavoritosPage() {
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Mis Favoritos</h1>
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      <div className="flex flex-wrap gap-4">
-        {favoritos.length === 0 && !error && (
-          <div className="text-gray-500">No tienes lugares favoritos.</div>
-        )}
-        {favoritos.map(l => (
-          <div
-            key={l.id}
-            className="w-48 text-center cursor-pointer hover:shadow-lg relative"
-            onClick={() => router.push(`/lugares/${l.id}`)}
+    <div className="emprendedores-page py-8 p-4">
+      <div className="container max-w-4xl mx-auto">
+        {/* Botón regresar a la página anterior */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) router.back();
+              else router.push("/principal");
+            }}
+            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
           >
-            {l.imagen_url && (
-              <img
-                src={l.imagen_url}
-                alt={l.nombre}
-                className="w-full rounded"
-              />
-            )}
-            <div className="block mt-2 font-bold text-blue-600 hover:underline">
-              {l.nombre}
-            </div>
-            <button
-              className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded"
-              onClick={e => {
-                e.stopPropagation();
-                handleEliminar(l.id);
-              }}
+            ← Volver
+          </button>
+        </div>
+        <h1 className="text-2xl font-bold mb-6">Mis Favoritos</h1>
+        {error && <div className="text-red-500 mb-4">{error}</div>}
+        <div className="flex flex-wrap gap-4">
+          {favoritos.length === 0 && !error && (
+            <div className="text-gray-500">No tienes lugares favoritos.</div>
+          )}
+          {favoritos.map(l => (
+            <div
+              key={l.id}
+              className="w-48 text-center cursor-pointer hover:shadow-lg relative"
+              onClick={() => router.push(`/lugares/${l.id}`)}
             >
-              Quitar
-            </button>
-          </div>
-        ))}
+              {l.imagen_url && (
+                <img
+                  src={l.imagen_url}
+                  alt={l.nombre}
+                  className="w-full rounded"
+                />
+              )}
+              <div className="block mt-2 font-bold text-blue-600 hover:underline">
+                {l.nombre}
+              </div>
+              <button
+                className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded"
+                onClick={e => {
+                  e.stopPropagation();
+                  handleEliminar(l.id);
+                }}
+              >
+                Quitar
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
