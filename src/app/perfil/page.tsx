@@ -15,7 +15,7 @@ export default function PerfilPage() {
       .then(res => res.json())
       .then(data => {
         if (data && data.correo) setUsuario({ nombre: data.nombre || "", correo: data.correo, foto: data.foto || "" });
-        else router.push("/login");
+        else router.push("/"); // <-- redirige a página principal en vez de /login
       });
   }, [router]);
 
@@ -103,7 +103,7 @@ export default function PerfilPage() {
     });
     if (res.ok) {
       alert("Usuario eliminado correctamente");
-      router.push("/login");
+      router.push("principal"); // <-- redirige a página principal en vez de /login
     } else {
       const data = await res.json();
       alert(data.error || "Error al eliminar usuario");
@@ -114,13 +114,24 @@ export default function PerfilPage() {
     <div className="p-8 max-w-md mx-auto relative">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Mi Cuenta</h1>
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded shadow"
-          onClick={() => window.open("/redes-sociales", "_blank")}
-          style={{ zIndex: 50 }}
-        >
-          Redes sociales
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded shadow"
+            onClick={() => window.open("/redes-sociales", "_blank")}
+            style={{ zIndex: 50 }}
+          >
+            Redes sociales
+          </button>
+
+          {/* Botón: regresar a la página principal */}
+          <button
+            className="ml-2 bg-gray-200 text-gray-800 px-3 py-1 rounded"
+            onClick={() => router.push("principal")}
+            aria-label="Ir a inicio"
+          >
+            ← Inicio
+          </button>
+        </div>
       </div>
       <div className="flex flex-col items-center mb-6">
         {usuario.foto ? (

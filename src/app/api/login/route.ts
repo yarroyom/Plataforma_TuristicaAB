@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       // devolver un error 500 con mensaje claro para los logs de Vercel
       return NextResponse.json({
         error: "Error de diagnóstico: comprueba DATABASE_URL y que Prisma esté generado (prisma generate).",
-        detail: String(diagErr?.message ?? diagErr),
+        detail: String((diagErr as any)?.message ?? diagErr),
       }, { status: 500 });
     }
 
