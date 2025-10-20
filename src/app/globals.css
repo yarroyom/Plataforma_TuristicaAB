@@ -868,27 +868,3 @@ header button {
 /* Si tienes pseudo-elementos decorativos, evita que las reglas móviles los anulen.
    Asegúrate de que en el bloque @media (max-width:640px) no esté incluida .emprendedores-page
    en la lista que fuerza fondo blanco. */
-
-/* Fondo degradado para el bloque de formulario de reseñas (amarillo -> verde) */
-.resena-page {
-  background: linear-gradient(135deg,
-    var(--grad-amarillo, rgba(250,204,21,0.18)) 0%,
-    var(--grad-amarillo-claro, rgba(254,243,199,0.12)) 30%,
-    var(--grad-verde, rgba(220,252,231,0.18)) 100%
-  );
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-size: cover;
-  padding: 1rem;
-  border-radius: 10px;
-}
-
-/* Estilo del formulario dentro del bloque: fondo blanco y sombra para contraste */
-.resena-page > form,
-.resena-form {
-  background: #ffffff !important;
-  padding: 1.25rem;
-  border-radius: 10px;
-  box-shadow: 0 8px 28px rgba(6,30,12,0.08);
-  border: 1px solid rgba(0,0,0,0.04);
-}

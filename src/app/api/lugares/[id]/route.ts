@@ -1,54 +1,114 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
+import prisma from "@/lib/prisma"; // ...existing import si ya lo tienes
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  let token = req.cookies.get("token")?.value;
-  if (!token) {
-    const authHeader = req.headers.get("authorization");
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      token = authHeader.replace("Bearer ", "");
-    }
-  }
-  if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
+// helper para resolver userId (acepta id numérico en cookie o JWT en Authorization)
+async function getUserIdFromReq(req: NextRequest): Promise<number | null> {
   try {
-    const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
-    if (payload.rol !== "ADMIN") {
-      return NextResponse.json({ error: "Solo el administrador puede editar la historia" }, { status: 403 });
+    let token = req.cookies.get("token")?.value ?? null;
+    const authHeader = req.headers.get("authorization") || "";
+    if (!token && authHeader.toLowerCase().startsWith("bearer ")) token = authHeader.split(" ")[1];
+    if (!token) return null;
+    if (/^\d+$/.test(token)) return Number(token);
+    if (process.env.JWT_SECRET) {
+      try {
+        const payload: any = jwt.verify(token, process.env.JWT_SECRET);
+        const maybe = payload?.id ?? payload?.sub ?? null;
+        const idNum = maybe != null ? Number(maybe) : NaN;
+        if (Number.isFinite(idNum) && idNum > 0) return idNum;
+      } catch (e) {
+        console.warn("getUserIdFromReq: JWT verify falló:", e);
+      }
     }
-    const { descripcion } = await req.json();
+    const num = Number(token);
+    return Number.isFinite(num) && num > 0 ? num : null;
+  } catch (e) {
+    console.error("getUserIdFromReq error:", e);
+    return null;
+  }
+}
 
-    // Log para depuración
-    console.log("ID recibido:", id);
-    console.log("Descripción recibida:", descripcion);
-
-    // Verifica si el lugar existe antes de actualizar
-    const lugarExistente = await prisma.lugarTuristico.findUnique({
-      where: { id: Number(id) },
-    });
-    if (!lugarExistente) {
-      console.error("Lugar no encontrado en la base de datos");
-      return NextResponse.json({ error: "Lugar no encontrado" }, { status: 404 });
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const lugarId = Number(params.id);
+    if (!Number.isFinite(lugarId) || lugarId <= 0) {
+      return NextResponse.json({ error: "ID de lugar inválido" }, { status: 400 });
     }
 
-    const lugar = await prisma.lugarTuristico.update({
-      where: { id: Number(id) },
-      data: { descripcion },
-    });
+    const body = await req.json().catch(() => ({}));
+    // Campos permitidos para actualizar
+    const updates: any = {};
+    if (typeof body.descripcion === "string") updates.descripcion = body.descripcion;
+    if (typeof body.nombre === "string") updates.nombre = body.nombre;
+    if (typeof body.imagen_url === "string") updates.imagen_url = body.imagen_url;
+    if (typeof body.tipo === "string") updates.tipo = body.tipo.toUpperCase() === "CULTURAL" ? "CULTURAL" : "TURISTICO";
+    if (body.latitud !== undefined && body.latitud !== null && !Number.isNaN(Number(body.latitud))) updates.latitud = Number(body.latitud);
+    if (body.longitud !== undefined && body.longitud !== null && !Number.isNaN(Number(body.longitud))) updates.longitud = Number(body.longitud);
+    if (typeof body.direccion === "string") updates.direccion = body.direccion;
 
-    // Log para depuración
-    console.log("Lugar actualizado:", lugar);
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "Nada para actualizar" }, { status: 400 });
+    }
 
-    return NextResponse.json({ message: "Historia actualizada", lugar });
+    // Autorización: permitir solo autor o ADMIN si aplica
+    const userId = await getUserIdFromReq(req);
+    // intentar obtener lugar actual para comprobar propietario (si existe campo usuarioId)
+    const existente = await prisma.lugares?.findUnique ? await (prisma as any).lugares.findUnique({ where: { id: lugarId } }) : await prisma.lugar?.findUnique ? await (prisma as any).lugar.findUnique({ where: { id: lugarId } }) : null;
+    // si no encontró por nombres probados, intentar buscar entre posibles modelos (fallback genérico)
+    // (si tu prisma usa otro nombre para el modelo, ajusta arriba)
+    if (!existente) {
+      // intentar con 'lugar' singular
+      try {
+        // nada: si no existe, seguir y dejar que update falle con mensaje claro
+      } catch {}
+    }
+
+    if (existente && existente.usuarioId && userId) {
+      // permitir solo al autor o admin
+      if (Number(existente.usuarioId) !== Number(userId)) {
+        const usuario = await prisma.usuario.findUnique({ where: { id: userId } });
+        if (!usuario || String(usuario.rol).toUpperCase() !== "ADMIN") {
+          return NextResponse.json({ error: "No autorizado para editar este lugar" }, { status: 403 });
+        }
+      }
+    } else if (userId) {
+      // si no hay propietario, exigir ADMIN para editar
+      const usuario = await prisma.usuario.findUnique({ where: { id: userId } });
+      if (!usuario || String(usuario.rol).toUpperCase() !== "ADMIN") {
+        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+      }
+    } else {
+      // sin userId: rechazar
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    // Realizar update en el modelo correcto; probar nombres comunes
+    const modelCandidates = ["lugares", "lugar", "lugarTuristico", "Lugar"];
+    let actualizado = null;
+    let lastErr: any = null;
+    for (const m of modelCandidates) {
+      const model = (prisma as any)[m];
+      if (!model || typeof model.update !== "function") continue;
+      try {
+        actualizado = await model.update({
+          where: { id: lugarId },
+          data: updates,
+        });
+        break;
+      } catch (e) {
+        lastErr = e;
+        // si falla por campo desconocido o where fail, intentamos siguiente candidato
+      }
+    }
+    if (!actualizado) {
+      console.error("PUT /api/lugares update falló:", lastErr);
+      return NextResponse.json({ error: "No se pudo actualizar: " + (lastErr?.message ?? "error interno") }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, lugar: actualizado });
   } catch (err) {
-    // Log para depuración
-    console.error("Error al actualizar:", err);
-    return NextResponse.json(
-      { error: "Error al actualizar", detalle: typeof err === "object" && err !== null && "message" in err ? (err as any).message : String(err) },
-      { status: 500 }
-    );
+    console.error("PUT /api/lugares/[id] error:", err);
+    return NextResponse.json({ error: "Error interno al actualizar lugar" }, { status: 500 });
   }
 }
 

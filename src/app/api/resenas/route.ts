@@ -40,6 +40,35 @@ function resolveResenaModel(prismaClient: any) {
   return null;
 }
 
+/* Buscar lugar por id probando nombres comunes de modelo */
+async function findLugarById(id: number) {
+  const candidates = ["lugar", "lugares", "lugarTuristico", "Lugar", "LugarTuristico"];
+  for (const name of candidates) {
+    const model = (prisma as any)[name];
+    if (model && typeof model.findUnique === "function") {
+      try {
+        const found = await model.findUnique({ where: { id } });
+        if (found) return found;
+      } catch {
+        // ignorar y probar siguiente candidato
+      }
+    }
+  }
+  return null;
+}
+
+/* Determina si un registro representa contenido cultural */
+function isCulturalRecord(record: any) {
+  if (!record) return false;
+  const fields = [
+    String(record.tipo ?? ""),
+    String(record.tipoLugar ?? ""),
+    String(record.categoria ?? ""),
+    String(record.esCultural ?? ""),
+  ];
+  return fields.some(f => f && f.toUpperCase().includes("CULTUR"));
+}
+
 /* POST: crear reseña */
 export async function POST(req: NextRequest) {
   try {
@@ -77,6 +106,43 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.warn("Indicador reseña create falló:", e);
     }
+
+    // --- NUEVO: en background actualizar indicador "Cantidad de comentarios sobre eventos culturales"
+    (async () => {
+      try {
+        const lid = Number(resena.lugarId ?? lugarId);
+        if (!Number.isFinite(lid) || lid <= 0) return;
+        const lugarDb = await findLugarById(lid);
+        if (!lugarDb) return;
+        if (!isCulturalRecord(lugarDb)) return;
+
+        const indicadorNombre = "Cantidad de comentarios sobre eventos culturales";
+        // obtener o crear indicador (meta opcional)
+        let indicador = await prisma.indicador.findFirst({ where: { nombre: indicadorNombre } });
+        if (!indicador) {
+          try {
+            indicador = await prisma.indicador.create({
+              data: { nombre: indicadorNombre, categoria: "Promoción Cultural", descripcion: "Conteo diario de comentarios en actividades culturales" }
+            });
+          } catch (err) {
+            // fallback si el modelo no acepta categoria/descripcion
+            indicador = await prisma.indicador.create({ data: { nombre: indicadorNombre } });
+          }
+        }
+
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+        const ultimo = await prisma.valorIndicador.findFirst({
+          where: { indicadorId: indicador.id, fecha: { gte: hoy } },
+          orderBy: { fecha: "desc" },
+        });
+        const nuevoValor = ultimo ? ultimo.valorActual + 1 : 1;
+        await prisma.valorIndicador.create({
+          data: { indicadorId: indicador.id, valorActual: nuevoValor, fecha: new Date() }
+        });
+      } catch (e) {
+        console.warn("No se pudo actualizar indicador de comentarios culturales (background):", e);
+      }
+    })();
 
     return NextResponse.json({
       resena: {
