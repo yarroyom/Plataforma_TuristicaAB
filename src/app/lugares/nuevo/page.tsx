@@ -27,6 +27,8 @@ export default function NuevoLugar() {
     longitud: "",
     tipo: "TURISTICO",
   });
+  const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/me", { credentials: "include" })
@@ -44,22 +46,49 @@ export default function NuevoLugar() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch("/api/lugares", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
+    if (saving) return;
+    setErrorMsg(null);
+    setSaving(true);
+    try {
+      const payload = {
         ...form,
         latitud: form.latitud ? parseFloat(form.latitud) : null,
         longitud: form.longitud ? parseFloat(form.longitud) : null,
-      }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      alert("Lugar registrado correctamente");
-      router.push("/lugares");
-    } else {
-      alert(data.error || "Error al registrar");
+      };
+      console.log("Enviando /api/lugares payload:", payload);
+
+      const res = await fetch("/api/lugares", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      // intentar parsear JSON; si falla, leer texto
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        const txt = await res.text().catch(() => "");
+        console.warn("Respuesta no JSON:", txt);
+        data = { _raw: txt };
+      }
+
+      if (res.ok) {
+        alert("Lugar registrado correctamente");
+        router.push("/lugares");
+        return;
+      }
+
+      // mostrar error devuelto por backend si existe
+      const remoteMsg = data?.error || data?.message || data?._raw || "Error al registrar";
+      console.warn("POST /api/lugares respuesta no ok:", res.status, remoteMsg, data);
+      setErrorMsg(String(remoteMsg));
+    } catch (err) {
+      console.error("Error creando lugar:", err);
+      setErrorMsg("Error de conexión al registrar lugar");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -125,8 +154,9 @@ export default function NuevoLugar() {
             <option value="CULTURAL">Lugar cultural</option>
           </select>
         </label>
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-          Registrar lugar
+        {errorMsg && <div className="text-red-600 text-sm">{errorMsg}</div>}
+        <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded">
+          {saving ? "Guardando..." : "Registrar lugar"}
         </button>
       </form>
     </div>

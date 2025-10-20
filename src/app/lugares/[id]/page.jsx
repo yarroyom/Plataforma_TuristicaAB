@@ -324,7 +324,8 @@ export default function LugarDetalle() {
   };
 
   const compartirEnFacebook = async () => {
-    await fetch("/api/indicadores/compartir-facebook", {
+    // Registrar el uso (no bloqueante)
+    fetch("/api/indicadores/compartir-facebook", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -336,13 +337,30 @@ export default function LugarDetalle() {
         imagen_url: lugar.imagen_url,
         url: window.location.href,
       }),
-    });
-    // Texto personalizado para la publicación
-    const texto = `${lugar.nombre}\n${lugar.descripcion || ""}\nReferencia: Plataforma Agua Blanca\n${window.location.href}`;
-    window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(texto)}`,
-      "_blank"
-    );
+    }).catch((e) => console.warn("No se registró indicador de compartir:", e));
+
+    const texto = `${lugar.nombre}\n${lugar.descripcion || ""}\nReferencia: Plataforma Agua Blanca`;
+    const url = window.location.href;
+
+    // Si el navegador soporta Web Share API (mejor en móvil), usarla
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: lugar.nombre,
+          text: texto,
+          url,
+        });
+        return;
+      } catch (e) {
+        // usuario canceló o falló; caemos al fallback
+        console.warn("Web Share falló o fue cancelado:", e);
+      }
+    }
+
+    // Fallback: abrir el diálogo de Facebook en nueva ventana con parámetros codificados
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(texto)}`;
+    // Abrir en nueva pestaña/ventana (noopener para seguridad)
+    window.open(fbUrl, "_blank", "noopener,noreferrer");
   };
 
   const compartirEnRedSocial = async (red) => {
