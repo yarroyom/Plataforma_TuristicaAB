@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-
+//prueba de vercel
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
