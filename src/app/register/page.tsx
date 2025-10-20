@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ nombre: "", correo: "", password: "", rol: "TURISTA" });
+  const [form, setForm] = useState({
+    nombre: "",
+    correo: "",
+    password: "",
+    rol: "TURISTA",
+  });
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -27,11 +32,16 @@ export default function RegisterPage() {
         body: JSON.stringify(form),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
         setMsg("Registro exitoso ✅. Redirigiendo al login...");
-        setForm({ nombre: "", correo: "", password: "", rol: "TURISTA" });
+        setForm({
+          nombre: "",
+          correo: "",
+          password: "",
+          rol: "TURISTA",
+        });
 
         setTimeout(() => {
           router.push("/login");
@@ -67,48 +77,57 @@ export default function RegisterPage() {
             className="mx-auto w-24 h-24 object-cover rounded-md mb-3"
           />
 
-          <h2 className="text-2xl font-bold text-center text-gray-800">Crear cuenta</h2>
+          <h2 className="text-2xl font-bold text-center text-gray-800">
+            Crear cuenta
+          </h2>
 
-          <input
-            type="text"
-            placeholder="Nombre"
-            value={form.nombre}
-            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-          />
+          {/* === FORM: envuelve campos y botón para que onSubmit funcione === */}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={form.nombre}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              required
+            />
 
-          <input
-            type="email"
-            placeholder="Correo"
-            value={form.correo}
-            onChange={(e) => setForm({ ...form, correo: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-          />
+            <input
+              type="email"
+              placeholder="Correo"
+              value={form.correo}
+              onChange={(e) => setForm({ ...form, correo: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              required
+            />
 
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-          />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              required
+            />
 
-          <select
-            value={form.rol}
-            onChange={(e) => setForm({ ...form, rol: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-          >
-            <option value="TURISTA">Turista</option>
-            <option value="EMPRENDEDOR">Emprendedor</option>
-          </select>
+            <select
+              value={form.rol}
+              onChange={(e) => setForm({ ...form, rol: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              required
+            >
+              <option value="TURISTA">Turista</option>
+              <option value="EMPRENDEDOR">Emprendedor</option>
+            </select>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-          >
-            {loading ? "Registrando..." : "Registrarse"}
-          </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              {loading ? "Registrando..." : "Registrarse"}
+            </button>
+          </form>
 
           {msg && <p className="text-center text-sm text-red-600">{msg}</p>}
         </div>
