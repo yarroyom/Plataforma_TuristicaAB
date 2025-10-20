@@ -15,6 +15,7 @@ export default function LugarDetalle() {
   const [editResenaId, setEditResenaId] = useState(null);
   const [editResenaTexto, setEditResenaTexto] = useState("");
   const [esFavorito, setEsFavorito] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
   const [calificacionUsuario, setCalificacionUsuario] = useState(0);
   const [loadingCalificacion, setLoadingCalificacion] = useState(false);
   const [perfilFacebook, setPerfilFacebook] = useState(null);
@@ -231,22 +232,49 @@ export default function LugarDetalle() {
   };
 
   const handleFavorito = async () => {
-    if (esFavorito) {
-      await fetch("/api/favoritos", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ lugarId: Number(id) }),
-      });
-      setEsFavorito(false);
-    } else {
-      await fetch("/api/favoritos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ lugarId: Number(id) }),
-      });
-      setEsFavorito(true);
+    if (favLoading) return;
+    setFavLoading(true);
+    try {
+      if (esFavorito) {
+        const res = await fetch("/api/favoritos", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ lugarId: Number(id) }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          console.warn("Error quitando favorito:", data);
+          alert(data.error || "No se pudo quitar de favoritos");
+          return;
+        }
+        setEsFavorito(false);
+        try { localStorage.setItem("favorito_removed", String(id)); setTimeout(() => localStorage.removeItem("favorito_removed"), 500); } catch {}
+      } else {
+        const res = await fetch("/api/favoritos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ lugarId: Number(id) }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          console.warn("Error agregando favorito:", data);
+          alert(data.error || data.message || "No se pudo agregar a favoritos");
+          return;
+        }
+        setEsFavorito(true);
+        try {
+          const favObj = data.favorito ?? { lugarId: Number(id) };
+          localStorage.setItem("favorito_added", JSON.stringify(favObj));
+          setTimeout(() => localStorage.removeItem("favorito_added"), 500);
+        } catch {}
+      }
+    } catch (err) {
+      console.error("handleFavorito error:", err);
+      alert("Error de conexión al actualizar favoritos");
+    } finally {
+      setFavLoading(false);
     }
   };
 
@@ -569,7 +597,7 @@ export default function LugarDetalle() {
                         </div>
                       )}
                     </>
-                  )}
+                  )} 
                 </div>
               </div>
             ))}
@@ -579,8 +607,9 @@ export default function LugarDetalle() {
       <button
         className={`mb-4 px-4 py-2 rounded ${esFavorito ? "bg-yellow-400 text-white" : "bg-gray-300 text-gray-700"}`}
         onClick={handleFavorito}
+        disabled={favLoading}
       >
-        {esFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
+        {favLoading ? "Procesando..." : (esFavorito ? "Quitar de favoritos" : "Agregar a favoritos")}
       </button>
       {/* Botones para compartir en redes sociales del usuario */}
       <div className="mb-4 flex gap-2 flex-wrap">
