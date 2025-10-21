@@ -17,6 +17,8 @@ export default function Principal() {
   // Nuevo estado para saber cuándo se cargó el usuario (evita flicker)
   const [userLoaded, setUserLoaded] = useState(false);
   const [lugares, setLugares] = useState<Lugar[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredLugares, setFilteredLugares] = useState<Lugar[]>([]);
   const [toast, setToast] = useState<{ mensaje: string; visible: boolean }>({
     mensaje: "",
     visible: false,
@@ -41,6 +43,7 @@ export default function Principal() {
       .then((data) => {
         console.log("Lugares recibidos:", data); // <-- log para depuración
         setLugares(data);
+        setFilteredLugares(data || []);
       });
   }, []);
 
@@ -106,12 +109,14 @@ export default function Principal() {
 
   // Preparar contenido de lugares fuera del JSX para evitar errores de parse
   const lugaresContent =
-    lugares.length === 0 ? (
+    filteredLugares.length === 0 ? (
       <div className="text-gray-500 col-span-full">
-        No hay lugares registrados o hubo un error al obtenerlos.
+        {searchTerm
+          ? `No se encontraron lugares para "${searchTerm}".`
+          : "No hay lugares registrados o hubo un error al obtenerlos."}
       </div>
     ) : (
-      lugares
+      filteredLugares
         .filter((l) => l && l.id)
         .map((l) => (
           <div
@@ -151,9 +156,57 @@ export default function Principal() {
           </div>
         )));
 
+  // Buscar lugares en cliente por nombre
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
+    const q = (searchTerm || "").trim().toLowerCase();
+    if (!q) {
+      setFilteredLugares(lugares);
+      return;
+    }
+    const results = (lugares || []).filter((l) => (l.nombre || "").toLowerCase().includes(q));
+    setFilteredLugares(results);
+    if (results.length === 0) {
+      setToast({ mensaje: `No se encontraron resultados para "${searchTerm}"`, visible: true });
+      setTimeout(() => setToast({ mensaje: "", visible: false }), 3000);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setFilteredLugares(lugares);
+  };
+
   return (
     <div className="principal-page">
       <div className="principal-content w-full"> {/* sin padding-top; el espacio se aplica al grid abajo */}
+        {/* Hero visual (solo diseño) */}
+        <section className="principal-hero relative overflow-hidden rounded-lg mb-6">
+          <div className="principal-hero-bg" aria-hidden />
+          <div className="principal-hero-inner container p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
+            <div className="flex-1">
+              <h2 className="text-xl md:text-2xl lg:text-2xl font-medium leading-tight text-white">EXPLORA Y CONOCE LOS MEJORES LUGARES TURÍSTICOS Y CULTURA DE AGUA BLANCA, JUTIAPA</h2>
+              <p className="mt-2 text-xs md:text-sm text-white/90 max-w-lg">Descubre sitios únicos, reseñas de la comunidad y actividades locales. Navega o busca por nombre.</p>
+            </div>
+            <div className="w-full md:w-96">
+              {/* Búsqueda funcional en cliente */}
+              <form onSubmit={(e) => handleSearch(e)} className="relative">
+                <input
+                  aria-label="Buscar lugares"
+                  placeholder="Buscar lugar, actividad o localidad"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg shadow-sm border border-transparent"
+                />
+                <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 bg-white text-green-700 px-3 py-2 rounded-lg font-semibold">Buscar</button>
+                {searchTerm && (
+                  <button type="button" onClick={clearSearch} className="absolute right-20 top-1/2 -translate-y-1/2 bg-transparent text-white/80 px-3 py-2 rounded">Limpiar</button>
+                )}
+              </form>
+             
+            </div>
+          </div>
+        </section>
         {/* Toast de notificación */}
         {toast.visible && (
           <div className="fixed top-6 right-6 z-50 bg-blue-600 text-white px-6 py-3 rounded shadow-lg animate-fade">
@@ -178,7 +231,7 @@ export default function Principal() {
                 <path d="M21 21H3" />
               </svg>
             </button>
-            <h1 className="text-xl font-bold">Agua Blanca</h1>
+            <h1 className="text-xl font-bold">MENU</h1>
           </div>
 
           <div className="flex items-center gap-4">
@@ -269,7 +322,7 @@ export default function Principal() {
 
         {/* Contenido principal: pantalla de lugares */}
         <main className="p-4">
-          <h2 className="page-title">Lugares Turísticos</h2>
+          <h2 className="page-title text-base md:text-lg">Lugares Turísticos</h2>
           {/* Botón solo para administrador */}
           {userLoaded && usuarioLogueado.rol === "ADMIN" && (
             <button
@@ -280,7 +333,7 @@ export default function Principal() {
             </button>
           )}
           {/* Grid responsive: espacio añadido debajo del título para separar las imágenes del header */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-20 md:mt-24 lg:mt-32">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8 md:mt-12 lg:mt-16">
             {lugaresContent}
           </div>
         </main>

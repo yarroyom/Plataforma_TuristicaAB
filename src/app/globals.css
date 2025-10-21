@@ -954,3 +954,63 @@ header button {
 /* Si tienes pseudo-elementos decorativos, evita que las reglas móviles los anulen.
    Asegúrate de que en el bloque @media (max-width:640px) no esté incluida .emprendedores-page
    en la lista que fuerza fondo blanco. */
+
+/* Principal: hero visual y ajustes de cards para aspecto profesional */
+.principal-hero {
+  /* Usamos la imagen del logo como fondo y una capa overlay para contraste */
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.principal-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/lugares/iglesia.jpg');
+  background-size: cover;
+  background-position: center right;
+  opacity: 0.65; /* aumentamos para que la imagen se vea claramente */
+  filter: none; /* quitar blur para más nitidez */
+  z-index: 0;
+}
+
+/* Capa overlay para asegurar contraste del texto sobre la imagen */
+.principal-hero::before {
+  /* overlay desactivado: dejamos transparente para mostrar la imagen limpia */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: none;
+  z-index: 1;
+}
+.principal-hero-inner { position: relative; z-index: 2; }
+
+/* Sombra ligera en el texto del hero para mantener legibilidad sobre la foto */
+.principal-hero-inner h2,
+.principal-hero-inner p {
+  text-shadow: 0 3px 12px rgba(0,0,0,0.45);
+}
+
+/* Tarjetas de lugar rediseñadas: imagen con overlay, título y acción */
+.card-lugar {
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,250,0.96));
+  border: 1px solid rgba(6,30,12,0.04);
+}
+.card-lugar-img { height: 180px; object-fit: cover; display:block; }
+.card-lugar .p-3 { padding: 0.75rem; }
+.card-lugar .font-semibold { font-weight:700; color: #064e3b; }
+.card-lugar .meta {
+  display:flex; gap:0.5rem; align-items:center; color:#55676b; font-size:0.9rem;
+}
+.card-lugar::after {
+  content:''; position:absolute; left:0; right:0; bottom:0; height:56px; background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.08)); pointer-events:none;
+}
+.card-lugar:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(6,30,12,0.08); }
+
+@media (max-width: 640px) {
+  .card-lugar { border-radius: 10px; }
+  .card-lugar-img { height: 140px; }
+  .principal-hero-inner { padding: 1rem; }
+}
