@@ -135,6 +135,7 @@ export default function LugarDetalle() {
 
   // Simula reseñas (puedes conectar a tu backend después)
   const [resenas, setResenas] = useState([]);
+  const [eliminandoIds, setEliminandoIds] = useState([]);
 
   // Agregar reseña
   const handleAgregarResena = async (e) => {
@@ -215,19 +216,39 @@ export default function LugarDetalle() {
   };
 
   const handleEliminarResena = async (id) => {
+    if (!confirm("¿Eliminar esta reseña?")) return;
+    if (eliminandoIds.includes(id)) return;
+
+    // marcar en proceso y hacer eliminación optimista
+    setEliminandoIds(prev => [...prev, id]);
+    const prevResenas = resenas;
+    setResenas(prev => prev.filter(r => r.id !== id));
+
     try {
       const res = await fetch(`/api/resenas/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
-      const data = await res.json();
-      if (res.ok) {
-        setResenas(resenas.filter(r => r.id !== id));
-      } else {
-        alert(data.error || "Error al eliminar la reseña");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // revertir lista
+        setResenas(prevResenas);
+        if (res.status === 401) {
+          alert("No autorizado. Por favor inicia sesión.");
+        } else if (res.status === 403) {
+          alert(data.error || "No tienes permiso para eliminar esta reseña.");
+        } else if (res.status === 409) {
+          alert(data.error || "No se pudo eliminar: existen registros relacionados.");
+        } else {
+          alert(data.error || "Error al eliminar la reseña");
+        }
       }
     } catch (err) {
-      alert("Error de conexión");
+      // revertir y mostrar error
+      setResenas(prevResenas);
+      alert("Error de conexión al eliminar la reseña");
+    } finally {
+      setEliminandoIds(prev => prev.filter(x => x !== id));
     }
   };
 
@@ -607,10 +628,11 @@ export default function LugarDetalle() {
                             Editar
                           </button>
                           <button
-                            className="bg-red-600 text-white px-2 py-1 rounded"
+                            className={`px-2 py-1 rounded ${eliminandoIds.includes(r.id) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-red-600 text-white'}`}
                             onClick={() => handleEliminarResena(r.id)}
+                            disabled={eliminandoIds.includes(r.id)}
                           >
-                            Eliminar
+                            {eliminandoIds.includes(r.id) ? 'Eliminando...' : 'Eliminar'}
                           </button>
                         </div>
                       )}
