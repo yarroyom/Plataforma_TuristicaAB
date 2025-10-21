@@ -181,29 +181,44 @@ export default function Principal() {
         <section className="principal-hero relative overflow-hidden rounded-lg mb-6">
           <div className="principal-hero-bg" aria-hidden />
           <div className="principal-hero-inner container p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
-            <div className="flex-1">
-              <h2 className="text-xl md:text-2xl lg:text-2xl font-medium leading-tight text-white">EXPLORA Y CONOCE LOS MEJORES LUGARES TURÍSTICOS Y CULTURA DE AGUA BLANCA, JUTIAPA</h2>
-              <p className="mt-2 text-xs md:text-sm text-white/90 max-w-lg">Descubre sitios únicos, reseñas de la comunidad y actividades locales. Navega o busca por nombre.</p>
+            <div className="flex-1 flex items-center gap-4">
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="hamburger text-white flex items-center gap-2"
+                aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+                aria-expanded={menuOpen}
+                aria-controls="main-side-drawer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" aria-hidden="true">
+                  <path d="M3 11.5L12 4l9 7.5" />
+                  <path d="M9 21V12h6v9" />
+                  <path d="M21 21H3" />
+                </svg>
+                <span className="menu-label">Menu</span>
+              </button>
             </div>
             <div className="w-full md:w-96">
-              {/* Búsqueda funcional en cliente */}
-              <form onSubmit={(e) => handleSearch(e)} className="relative">
-                <input
-                  aria-label="Buscar lugares"
-                  placeholder="Buscar lugar, actividad o localidad"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg shadow-sm border border-transparent"
-                />
-                <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 bg-white text-green-700 px-3 py-2 rounded-lg font-semibold">Buscar</button>
-                {searchTerm && (
-                  <button type="button" onClick={clearSearch} className="absolute right-20 top-1/2 -translate-y-1/2 bg-transparent text-white/80 px-3 py-2 rounded">Limpiar</button>
-                )}
-              </form>
-             
+              {/* texto de la portada eliminado para destacar la foto */}
             </div>
           </div>
         </section>
+
+        {/* Barra de búsqueda separada (fuera de la portada) */}
+        <div className="container principal-search-bar max-w-3xl mx-auto -mt-6 mb-6 px-4">
+          <form onSubmit={(e) => handleSearch(e)} className="relative">
+            <input
+              aria-label="Buscar lugares"
+              placeholder="Buscar lugar, actividad o localidad"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg shadow-sm border border-transparent bg-white"
+            />
+            <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 bg-white text-green-700 px-3 py-2 rounded-lg font-semibold">Buscar</button>
+            {searchTerm && (
+              <button type="button" onClick={clearSearch} className="absolute right-20 top-1/2 -translate-y-1/2 bg-transparent text-gray-700 px-3 py-2 rounded">Limpiar</button>
+            )}
+          </form>
+        </div>
         {/* Toast de notificación */}
         {toast.visible && (
           <div className="fixed top-6 right-6 z-50 bg-blue-600 text-white px-6 py-3 rounded shadow-lg animate-fade">
@@ -211,45 +226,9 @@ export default function Principal() {
           </div>
         )}
 
-        {/* Barra superior */}
-        <header className="relative flex items-center justify-between bg-blue-600 text-white p-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="hamburger text-green-800"
-              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-              aria-expanded={menuOpen}
-              aria-controls="main-side-drawer"
-            >
-              {/* Icono SVG: casita (home) - usa currentColor para heredar color del botón */}
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" aria-hidden="true">
-                <path d="M3 11.5L12 4l9 7.5" />
-                <path d="M9 21V12h6v9" />
-                <path d="M21 21H3" />
-              </svg>
-            </button>
-            <h1 className="text-xl font-bold">MENU</h1>
-          </div>
+        {/* Header actions moved into the hero so they appear over the portada */}
 
-          <div className="flex items-center gap-4">
-            {/* Logo posicionado respecto al header */}
-            <img src="/images/lugares/AB.jpeg" alt="Logo Agua Blanca" className="site-logo" />
-            <button
-              onClick={() => router.push("/perfil")}
-              className="header-action bg-gray-200 text-blue-700 px-3 py-1 rounded"
-            >
-              Cuenta
-            </button>
-            <button
-              onClick={handleLogout}
-              className="btn-logout header-action"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </header>
-
-        {/* Menú desplegable */}
+  {/* Menú desplegable */}
         {/* Side drawer menú lateral (abre desde la izquierda) */}
         <div>
           <div
@@ -312,10 +291,24 @@ export default function Principal() {
                 >
                   <span className="menu-emoji">🌐</span> Redes sociales
                 </li>
+                <li
+                  onClick={() => { router.push("/perfil"); setMenuOpen(false); }}
+                  className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+                >
+                  <span className="menu-emoji">👤</span> Cuenta
+                </li>
+                <li
+                  onClick={() => { handleLogout(); setMenuOpen(false); }}
+                  className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+                >
+                  <span className="menu-emoji">🚪</span> Cerrar sesión
+                </li>
               </ul>
             </div>
           </nav>
         </div>
+
+        {/* header-actions removed: Cuenta and logout moved into the drawer */}
 
         {/* Contenido principal: pantalla de lugares */}
         <main className="p-4">

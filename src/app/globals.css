@@ -594,13 +594,29 @@ canvas { max-width: 100% !important; height: 100% !important; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: transparent;
-  border: none;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg,#10b981,#059669) !important; /* solid green pill */
+  border: 1px solid rgba(6,78,59,0.12) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 30px rgba(6,78,59,0.18) !important;
   cursor: pointer;
+  z-index: 200; /* always above hero */
 }
+
+/* Label next to hamburger: green pill to highlight the menu */
+.hamburger .menu-label {
+  display: inline-block;
+  color: #fff;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  line-height: 1;
+  margin-left: 8px;
+}
+
+.hamburger.flex.items-center { gap: 0.5rem; }
 
 /* Emoji en los items del menú: tamaño y separación */
 .menu-emoji {
@@ -681,14 +697,15 @@ canvas { max-width: 100% !important; height: 100% !important; }
 }
 
 /* Pequeño ajuste visual para el botón hamburguesa en header */
-.hamburger span { display: block; height: 2px; background: white; }
 .hamburger:focus { outline: 2px solid rgba(255,255,255,0.2); }
 
 /* Icono dentro del botón hamburger (ahora home SVG) */
 .hamburger svg {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  fill: #ffffff; /* ensure white icon */
+  stroke: none;
 }
 .hamburger:hover svg { opacity: 0.9; transform: scale(1.02); }
 
@@ -906,32 +923,55 @@ canvas { max-width: 100% !important; height: 100% !important; }
 }
 
 /* Página principal: quitar imagen de fondo, mantener contenedor */
-.principal-page {
-  background: none; /* foto eliminada */
-  min-height: 100vh;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  position: relative; /* necesario para posicionar logo */
+.principal-search-bar {
+  margin: -2.25rem auto 1.5rem;
+  width: min(86ch, 980px);
+  padding: 0 0.75rem;
+}
+.principal-search-bar form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  /* Transparente: sin fondo sólido, look similar al drawer (marca de agua) */
+  background: transparent !important;
+  padding: 0.35rem 0.6rem; /* aún más compacto */
+  border-radius: 10px;
+  /* sutil separación: outline en vez de fondo para no tapar la foto */
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12), 0 6px 18px rgba(2,6,23,0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.principal-search-bar input[type="search"] {
+  flex: 1 1 auto;
+  border: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.95rem; /* slightly smaller */
+  background: transparent !important; /* transparent over hero */
+  color: #ffffff !important; /* text white to be legible */
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+  /* remove visible internal borders so it looks like a floating input */
+  border: none !important;
+  box-shadow: none !important;
+}
+.principal-search-bar input[type="search"]::placeholder {
+  color: rgba(255,255,255,0.75);
+}
+.principal-search-bar .btn-search {
+  background: transparent;
+  border: 0;
+  color: #0b8f5a; /* green accent but darker to be visible over hero */
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
 }
 
-/* Contenedor interno más compacto sobre el fondo */
-.principal-page .principal-content {
-  max-width: 980px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-/* Ajustes móviles (si aplica) */
+/* Compact icon/button for small screens */
 @media (max-width: 640px) {
-  .principal-page {
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-  }
+  .principal-search-bar { margin-top: -1.25rem; }
+  .principal-search-bar form { padding: 0.45rem 0.6rem; border-radius: 8px; }
+  .principal-search-bar input[type="search"] { font-size: 0.95rem; }
+  .principal-search-bar .btn-search { font-size: 0.95rem; }
 }
-
-/* Logo posicionado respecto al header: usar top:100% + translateY para mantener posición al cambiar altura */
 .site-logo {
   position: absolute;
   top: 100%;               /* justo debajo del header */
@@ -1204,32 +1244,31 @@ header button {
 
 /* Principal: hero visual y ajustes de cards para aspecto profesional */
 .principal-hero {
-  /* Hero compacto: usamos un max-height para que la portada ocupe menos espacio */
+  /* Hero más grande: aumentamos visibilidad de la foto */
   position: relative;
   border-radius: 10px;
   overflow: hidden;
-  max-height: 360px; /* límite en desktop */
+  max-height: 520px; /* mayor presencia en desktop */
+  min-height: 420px;
 }
 .principal-hero-bg {
   position: absolute;
   inset: 0;
   background-image: url('/images/lugares/iglesia.jpg');
   background-size: cover;
-  background-position: center right;
-  /* Hero background at watermark intensity */
-  opacity: 0.22; /* antes 0.78 */
-  filter: saturate(0.88) contrast(0.96) blur(0.4px);
+  background-position: center center;
+  /* Aumentar la visibilidad de la foto y reducir filtros para que se note más */
+  opacity: 0.9; /* más visible */
+  filter: saturate(1.02) contrast(1.02) blur(0px);
   z-index: 0;
 }
 
-/* Capa overlay para asegurar contraste del texto sobre la imagen */
+/* Overlay muy sutil para mantener texto legible (pero lo dejaremos transparente si se quita el texto) */
 .principal-hero::before {
-  /* overlay desactivado: dejamos transparente para mostrar la imagen limpia */
   content: "";
   position: absolute;
   inset: 0;
-  /* Overlay más sutil para dejar la imagen como marca de agua */
-  background: linear-gradient(180deg, rgba(0,0,0,0.14), rgba(0,0,0,0.08));
+  background: rgba(0,0,0,0.06); /* muy sutil */
   z-index: 1;
 }
 .principal-hero-inner { position: relative; z-index: 2; padding: 1rem 1rem; }
@@ -1238,6 +1277,68 @@ header button {
 .principal-hero-inner h2,
 .principal-hero-inner p {
   text-shadow: 0 3px 12px rgba(0,0,0,0.45);
+}
+
+/* Header actions inside the hero: position bottom-right over the portada */
+.principal-hero .header-actions {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  z-index: 30; /* above hero content */
+}
+
+/* Buttons and logo when placed inside the hero */
+.principal-hero .header-actions .hamburger,
+.principal-hero .header-actions .header-action,
+.principal-hero .header-actions .btn-logout,
+.principal-hero .header-actions .site-logo {
+  box-shadow: 0 8px 28px rgba(2,6,23,0.45);
+}
+.principal-hero .header-actions .hamburger {
+  background: rgba(255,255,255,0.06);
+  color: #ffffff;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+}
+.principal-hero .header-actions .site-logo {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  transform: none !important;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.85);
+  padding: 3px;
+}
+.principal-hero .header-actions .header-action {
+  background: rgba(255,255,255,0.96);
+  color: #065f46; /* verde oscuro para contraste */
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.principal-hero .header-actions .btn-logout {
+  background: #ef4444;
+  color: white;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .principal-hero .header-actions {
+    right: 0.75rem;
+    bottom: 0.6rem;
+    gap: 0.4rem;
+  }
+  .principal-hero .header-actions .site-logo { width: 32px; height: 32px; }
+  .principal-hero .header-actions .header-action,
+  .principal-hero .header-actions .btn-logout { padding: 0.25rem 0.5rem; font-size: 13px; }
 }
 
 /* Tarjetas de lugar rediseñadas: imagen con overlay, título y acción */
@@ -1263,11 +1364,40 @@ header button {
   .card-lugar { border-radius: 10px; }
   /* Tarjetas más grandes en móvil para mejor legibilidad */
   .card-lugar-img { height: 180px; }
-  .principal-hero { max-height: 220px; }
-  .principal-hero-bg { background-position: center; opacity: 0.92; }
-  .principal-hero-inner { padding: 0.7rem; }
+  .principal-hero { max-height: 320px; min-height: 260px; }
+  .principal-hero-bg { background-position: center; opacity: 0.9; }
+  .principal-hero-inner { padding: 0.8rem; }
   .principal-hero-inner h2 { font-size: 0.95rem; line-height: 1.05; }
   .principal-hero-inner p { font-size: 0.78rem; }
+}
+
+/* Barra de búsqueda compacta y separada del hero */
+.principal-search-bar {
+  margin-top: 1rem; /* despegar del hero */
+  margin-bottom: 1.25rem;
+}
+.principal-search-bar form { position: relative; }
+.principal-search-bar input {
+  height: 44px;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(6,30,12,0.06);
+  border: 1px solid rgba(6,30,12,0.06);
+}
+.principal-search-bar button[type="submit"] {
+  background: transparent; /* keep text visible */
+  color: #065f46;
+  font-weight: 700;
+  border: none;
+  padding: 0.25rem 0.6rem;
+}
+.principal-search-bar .clear-btn {
+  color: #6b7280;
+}
+
+@media (max-width: 640px) {
+  .principal-search-bar input { height: 40px; padding: 0.45rem 0.9rem; }
+  .principal-search-bar { margin-top: 0.6rem; margin-bottom: 0.9rem; }
 }
 
 /* Compact row layout for lugar cards on small screens */
@@ -1316,6 +1446,17 @@ header button {
   border: none !important;
   padding: 0.45rem 0.8rem !important;
   border-radius: 8px !important;
+}
+
+/* Wider rule to ensure tablet/mobile fallbacks keep the button in the corner */
+@media (max-width: 1024px) {
+  .principal-page header .hamburger {
+    position: fixed !important;
+    left: 12px !important;
+    top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+    z-index: 99999 !important;
+    transform: none !important;
+  }
 }
 .btn-logout:hover { background: #b91c1c !important; }
 
@@ -1672,3 +1813,198 @@ nav.side-drawer [data-selected="true"] {
     color: rgba(255,255,255,0.8) !important;
   }
 }
+
+  /* ---------- Overrides: header sobre la portada y botones destacados ---------- */
+  /* Hacemos el header de la principal transparente y lo colocamos encima del hero */
+  .principal-page header {
+    background: transparent !important;
+    color: #ffffff !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    z-index: 90 !important;
+    padding: 0.6rem 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-shadow: none !important;
+  }
+
+  /* Asegurar que textos e iconos dentro del header sean blancos sobre la portada */
+  .principal-page header .text-xl,
+  .principal-page header h1,
+  .principal-page header button,
+  .principal-page header a {
+    color: #ffffff !important;
+  }
+
+  /* Ajuste visual para las barras del icono hamburger en la principal */
+  .principal-page header .hamburger .bar,
+  .principal-page header .hamburger span {
+    background: #ffffff !important;
+  }
+
+  /* Agrupar las acciones del header y posicionarlas sobre la portada (derecha) */
+  .principal-page header .header-actions {
+    position: absolute !important;
+    right: 1rem !important;
+    top: 0.8rem !important;
+    display: flex !important;
+    gap: 0.6rem !important;
+    align-items: center !important;
+    z-index: 95 !important;
+  }
+
+  /* Botón 'Cuenta' (usar .btn-register si existe) — fondo claro para destacar sobre la portada */
+  .principal-page header .header-actions .btn-register,
+  .principal-page header .header-actions .btn-account {
+    background: rgba(255,255,255,0.95) !important;
+    color: #0b3a03 !important;
+    border-radius: 8px !important;
+    padding: 0.45rem 0.7rem !important;
+    border: 1px solid rgba(6,78,59,0.06) !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important;
+  }
+
+  /* Botón 'Cerrar sesión' — color rojo destacado */
+  .principal-page header .header-actions .btn-logout {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 0.45rem 0.75rem !important;
+    box-shadow: 0 8px 26px rgba(0,0,0,0.12) !important;
+    border: none !important;
+  }
+
+  /* En pantallas pequeñas reducir padding y mantener legibilidad */
+  @media (max-width: 640px) {
+    .principal-page header .header-actions {
+      top: 0.6rem !important;
+      right: 0.6rem !important;
+      gap: 0.4rem !important;
+    }
+    .principal-page header .header-actions .btn-register,
+    .principal-page header .header-actions .btn-account,
+    .principal-page header .header-actions .btn-logout {
+      padding: 0.36rem 0.5rem !important;
+      font-size: 0.92rem !important;
+    }
+    /* Evitar que los botones tapen el hero en dispositivos muy pequeños: se hacen semi-compactos */
+    .principal-page header .header-actions .btn-register { display: inline-flex !important; }
+  }
+
+  /* Si el markup no tiene la agrupación .header-actions, aplicamos estilo directo a los botones dentro del header */
+  .principal-page header .btn-register:not(.header-actions *),
+  .principal-page header .btn-logout:not(.header-actions *) {
+    margin-left: 0.5rem !important;
+  }
+
+  /* Pequeña transición para cuando se muestren/oculten */
+  .principal-page header .btn-register,
+  .principal-page header .btn-logout {
+    transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease !important;
+  }
+
+  /* Fin de overrides de header */
+
+  /* Make header actions sit inside the hero: use a hero-height variable and calculate offsets
+     so the buttons appear at the inner corner of the portada (right edge, near bottom of hero)
+     without changing markup. */
+  :root {
+    --principal-hero-height: 360px; /* default desktop hero height (matches .principal-hero max-height) */
+  }
+
+  /* mobile hero height fallback */
+  @media (max-width: 640px) {
+    :root { --principal-hero-height: 220px; }
+  }
+
+  /* Position header actions relative to the hero: place them near the bottom-right inside hero */
+  .principal-page header .header-actions {
+    /* place vertically near the bottom of the hero (hero height minus ~3rem) */
+    top: calc(var(--principal-hero-height) - 3.2rem) !important;
+    /* Align horizontally with the centered main container (max-width:980px) when possible.
+       If the viewport is narrower than 980px the fallback 'right: 1rem' applies. */
+    right: calc((100% - 980px) / 2 + 1rem) !important;
+    transition: top .18s ease, right .18s ease;
+  }
+
+  /* If the viewport is narrower than the content width, keep actions close to the edge */
+  @media (max-width: 1024px) {
+    .principal-page header .header-actions {
+      right: 1rem !important;
+      top: calc(var(--principal-hero-height) - 2.6rem) !important;
+    }
+  }
+
+  /* Ensure header does not overflow the hero area visually */
+  .principal-page header {
+    overflow: visible !important;
+  }
+
+  /* Mobile-first responsive tweaks ------------------------------------------------ */
+  @media (max-width: 880px) {
+    /* Reduce hero height on small screens */
+    .principal-hero { max-height: 360px; min-height: 200px; }
+    .principal-hero-bg { background-position: center top; opacity: 0.95; }
+    .principal-hero-inner { padding: 0.75rem 0.75rem; }
+
+    /* Make the menu button compact but keep the label visible on small screens */
+    .hamburger { padding: 6px 8px; }
+    .hamburger .menu-label {
+      display: inline-block !important;
+      font-size: 0.78rem !important;
+      padding: 0.12rem 0.36rem !important;
+    }
+
+    /* Compact search bar under hero */
+    .principal-search-bar { margin-top: -1.25rem; width: calc(100% - 2rem); }
+    .principal-search-bar form { padding: 0.4rem 0.5rem; border-radius: 8px; }
+    .principal-search-bar input[type="search"] { padding: 0.45rem 0.9rem; font-size: 0.95rem; }
+    .principal-search-bar .btn-search { padding: 0.28rem 0.45rem; font-size: 0.95rem; }
+
+    /* Cards stack and have larger tap targets */
+    .card-lugar-row { gap: 1rem; padding: 0.75rem; }
+    .card-lugar-thumb { width: 100px; height: 84px; border-radius: 8px; }
+
+    /* Reduce paddings and make text sizes appropriate */
+    .page-title { font-size: 1.05rem; }
+    .btn-register { padding: 0.5rem 0.85rem; font-size: 0.92rem; }
+  }
+
+  @media (max-width: 420px) {
+    .principal-hero { max-height: 280px; min-height: 160px; }
+    .principal-hero-inner { padding: 0.6rem; }
+    .hamburger { padding: 6px 8px; border-radius: 8px; }
+    .hamburger .menu-label { font-size: 0.72rem !important; padding: 0.1rem 0.28rem !important; }
+    .principal-search-bar input[type="search"] { font-size: 0.9rem; }
+    .card-lugar-thumb { width: 96px; height: 72px; }
+  }
+
+  /* Fix menu button to top-left on small screens so it's always reachable */
+  @media (max-width: 880px) {
+    .principal-page header .hamburger {
+      position: fixed !important;
+      left: 12px !important;
+      top: 12px !important;
+      z-index: 9999 !important;
+      transform: none !important;
+      /* keep desktop pill look */
+      background: linear-gradient(180deg,#10b981,#059669) !important;
+      color: #fff !important;
+      padding: 8px 12px !important;
+      border-radius: 999px !important;
+      box-shadow: 0 10px 30px rgba(6,78,59,0.18) !important;
+    }
+    /* make sure header doesn't cover the button */
+    .principal-page header { padding-top: 2.5rem !important; }
+  }
+
+  /* Accessibility: ensure focus ring is visible on small screens */
+  @media (max-width: 1024px) {
+    .hamburger:focus { outline: 3px solid rgba(16,185,129,0.18); }
+    .principal-search-bar input:focus { box-shadow: 0 0 0 4px rgba(16,185,129,0.12); }
+  }
+
+  /* End mobile tweaks ------------------------------------------------------------- */
