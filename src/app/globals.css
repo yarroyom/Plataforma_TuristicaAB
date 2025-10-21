@@ -1631,3 +1631,44 @@ nav.side-drawer [data-selected="true"] {
     border: none !important;
   }
 }
+
+/* Regla agresiva para móvil: forzar blanco en textos, enlaces, svg, icons y utilidades de Tailwind
+   para cubrir casos donde clases como text-sky-500 o fill-sky-500 están aplicadas. */
+@media (max-width: 640px) {
+  nav.side-drawer,
+  nav.side-drawer * {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6) !important;
+  }
+
+  /* Forzar fill/stroke de SVGs e iconos */
+  nav.side-drawer svg,
+  nav.side-drawer svg * {
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+    color: #ffffff !important;
+  }
+
+  /* Forzar utilidades text-*/
+  nav.side-drawer [class*="text-"] {
+    color: #ffffff !important;
+  }
+
+  /* Forzar utilidades fill-*/
+  nav.side-drawer [class*="fill-"] {
+    fill: #ffffff !important;
+  }
+
+  /* Forzar color en elementos con estilos inline o pseudo elementos */
+  nav.side-drawer *::before,
+  nav.side-drawer *::after {
+    color: #ffffff !important;
+  }
+
+  /* Asegurar placeholders en inputs (si existieran dentro del drawer) sean blancos */
+  nav.side-drawer input::placeholder,
+  nav.side-drawer textarea::placeholder {
+    color: rgba(255,255,255,0.8) !important;
+  }
+}
