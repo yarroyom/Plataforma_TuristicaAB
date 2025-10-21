@@ -321,7 +321,8 @@ canvas { max-width: 100% !important; height: 100% !important; }
   width: 0;
   max-width: 320px; /* ancho final */
   overflow: hidden;
-  background: var(--color-background, #fff);
+  /* fondo limón para el drawer (claro -> vivo) */
+  background: linear-gradient(180deg, #DFF7A8, #A3E635); /* claro limón -> limón vivo */
   box-shadow: 2px 0 12px rgba(0,0,0,0.12);
   transform: translateX(-100%); /* oculto por defecto (fuera de la pantalla) */
   transition: transform .28s cubic-bezier(.2,.8,.2,1), width .2s ease;
@@ -364,10 +365,11 @@ canvas { max-width: 100% !important; height: 100% !important; }
 /* Contenido del drawer: menú vertical compacto */
 .side-drawer .drawer-header {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid rgba(6,30,12,0.06);
   display:flex;
   align-items:center;
   justify-content:space-between;
+  color: #064e3b; /* texto oscuro para contraste con fondo limón */
 }
 .side-drawer .drawer-body {
   padding: 0.5rem 0.75rem;
@@ -377,13 +379,13 @@ canvas { max-width: 100% !important; height: 100% !important; }
 .side-drawer a, .side-drawer button {
   display: block;
   padding: 0.6rem 0.75rem;
-  color: var(--foreground);
+  color: #064e3b; /* texto oscuro para buen contraste sobre limón */
   text-decoration: none;
   font-size: 0.95rem;
   border-radius: 6px;
 }
 .side-drawer a:hover, .side-drawer button:hover {
-  background: rgba(0,0,0,0.03);
+  background: rgba(6,30,12,0.06); /* sutil sombreado oscuro en hover */
 }
 
 /* Botón hamburguesa compacto (si no existe) */
@@ -398,6 +400,62 @@ canvas { max-width: 100% !important; height: 100% !important; }
   border: none;
   cursor: pointer;
 }
+
+/* Emoji en los items del menú: tamaño y separación */
+.menu-emoji {
+  display: inline-block;
+  width: 1.4rem;
+  text-align: center;
+  margin-right: 0.6rem;
+  font-size: 1.1rem;
+  vertical-align: middle;
+}
+
+/* Emoji en círculo blanco para contraste en fondo verde */
+.side-drawer .menu-emoji {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 99px;
+  background: #ffffff;
+  color: #064e3b; /* emoji dark green look */
+  margin-right: 0.8rem;
+  font-size: 1rem;
+  box-shadow: 0 4px 10px rgba(6,30,12,0.08);
+}
+.side-drawer ul li {
+  color: #064e3b; /* texto oscuro para buen contraste sobre limón */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 6px;
+}
+
+/* Pequeño ajuste visual para el botón hamburguesa en header */
+.hamburger span { display: block; height: 2px; background: white; }
+.hamburger:focus { outline: 2px solid rgba(255,255,255,0.2); }
+
+/* Icono dentro del botón hamburger (ahora home SVG) */
+.hamburger svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.hamburger:hover svg { opacity: 0.9; transform: scale(1.02); }
+
+/* Ajustes para header en la página principal: eliminar fondo blanco del icono y asegurar contraste */
+.principal-page header .hamburger {
+  background: transparent;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.principal-page header .hamburger svg { color: #0b3a03; }
 
 /* Icono interno: barras */
 .hamburger .bar {
@@ -544,6 +602,33 @@ canvas { max-width: 100% !important; height: 100% !important; }
 
 /* Formulario: fondo blanco en la página de comentarios */
 .comentarios-page form,
+
+/* Estilos para la página principal */
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #0b3a03;
+}
+.btn-register {
+  background: linear-gradient(180deg, #10b981, #059669);
+  color: #fff;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 8px 18px rgba(6,78,59,0.12);
+  border: none;
+  margin-bottom: 1rem;
+}
+.btn-register:hover { transform: translateY(-2px); }
+
+/* Tarjeta de lugar visualmente mejorada */
+.card-lugar { border-radius: 12px; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease; }
+.card-lugar:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(6,30,12,0.08); }
+.card-lugar-img { display:block; width:100%; height:150px; object-fit:cover; }
+.card-lugar .p-3 { padding: 1rem; }
+.card-lugar .font-semibold { font-weight:700; color: #0b3a03; }
+
 .comentarios-page .page-container form,
 .comentarios-page .card form {
   background: #ffffff;

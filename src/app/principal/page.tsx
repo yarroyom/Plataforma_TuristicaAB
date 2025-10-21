@@ -116,17 +116,17 @@ export default function Principal() {
         .map((l) => (
           <div
             key={l.id}
-            className="bg-white rounded shadow hover:shadow-lg overflow-hidden relative cursor-pointer"
+            className="card-lugar bg-white rounded shadow hover:shadow-lg overflow-hidden relative cursor-pointer"
             onClick={() => router.push(`/lugares/${l.id}`)}
           >
             {l.imagen_url ? (
               <img
                 src={l.imagen_url}
                 alt={l.nombre}
-                className="w-full h-36 object-cover"
+                className="card-lugar-img w-full h-36 object-cover"
               />
             ) : (
-              <div className="w-full h-36 bg-gray-100 flex items-center justify-center text-gray-400">
+              <div className="card-lugar-img w-full h-36 bg-gray-100 flex items-center justify-center text-gray-400">
                 Sin imagen
               </div>
             )}
@@ -163,18 +163,27 @@ export default function Principal() {
 
         {/* Barra superior */}
         <header className="relative flex items-center justify-between bg-blue-600 text-white p-4">
-          <h1 className="text-xl font-bold">Agua Blanca</h1>
-          {/* Logo posicionado respecto al header */}
-          <img src="/images/lugares/AB.jpeg" alt="Logo Agua Blanca" className="site-logo" />
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex flex-col justify-between w-6 h-6"
+              className="hamburger text-green-800"
+              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={menuOpen}
+              aria-controls="main-side-drawer"
             >
-              <span className="block h-0.5 w-full bg-white"></span>
-              <span className="block h-0.5 w-full bg-white"></span>
-              <span className="block h-0.5 w-full bg-white"></span>
+              {/* Icono SVG: casita (home) - usa currentColor para heredar color del botón */}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" aria-hidden="true">
+                <path d="M3 11.5L12 4l9 7.5" />
+                <path d="M9 21V12h6v9" />
+                <path d="M21 21H3" />
+              </svg>
             </button>
+            <h1 className="text-xl font-bold">Agua Blanca</h1>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* Logo posicionado respecto al header */}
+            <img src="/images/lugares/AB.jpeg" alt="Logo Agua Blanca" className="site-logo" />
             <button
               onClick={() => router.push("/perfil")}
               className="bg-gray-200 text-blue-700 px-3 py-1 rounded"
@@ -191,64 +200,80 @@ export default function Principal() {
         </header>
 
         {/* Menú desplegable */}
-        {menuOpen && (
-          <nav className="bg-white shadow-md p-4">
-            <ul className="flex flex-col space-y-2">
-              <li
-                onClick={() => router.push("/emprendedores")}
-                className="hover:bg-gray-100 p-2 rounded cursor-pointer"
-              >
-                Emprendedor
-              </li>
-              <li
-                onClick={() => router.push("/favoritos")}
-                className="hover:bg-gray-100 p-2 rounded cursor-pointer"
-              >
-                Favoritos
-              </li>
-              <li
-                onClick={() => router.push("/calendario")}
-                className="hover:bg-gray-100 p-2 rounded cursor-pointer"
-              >
-                Calendario
-              </li>
-              <li
-                onClick={() => router.push("/notificaciones")}
-                className="hover:bg-gray-100 p-2 rounded cursor-pointer"
-              >
-                Notificaciones
-              </li>
-              <li
-                onClick={() => router.push("/comentarios/nuevo")}
-                className="hover:bg-gray-100 p-2 rounded cursor-pointer"
-              >
-                Dejar Comentario
-              </li>
-              {userLoaded && usuarioLogueado.rol === "ADMIN" && (
+        {/* Side drawer menú lateral (abre desde la izquierda) */}
+        <div>
+          <div
+            className={`side-backdrop ${menuOpen ? "open" : ""}`}
+            onClick={() => setMenuOpen(false)}
+            aria-hidden={!menuOpen}
+          />
+          <nav
+            id="main-side-drawer"
+            className={`side-drawer ${menuOpen ? "open" : ""}`}
+            aria-hidden={!menuOpen}
+          >
+            <div className="drawer-header">
+              <strong>Menú</strong>
+              <button className="bg-transparent border-none text-gray-600" onClick={() => setMenuOpen(false)} aria-label="Cerrar menú">✕</button>
+            </div>
+            <div className="drawer-body">
+              <ul className="flex flex-col space-y-2">
                 <li
-                  onClick={() => router.push("/estadistica")}
+                  onClick={() => { router.push("/emprendedores"); setMenuOpen(false); }}
                   className="hover:bg-gray-100 p-2 rounded cursor-pointer"
                 >
-                  Estadística
+                  <span className="menu-emoji">🏪</span> Emprendedor
                 </li>
-              )}
-              <li
-                onClick={() => window.open("/redes-sociales", "_blank")}
-                className="hover:bg-gray-100 p-2 rounded cursor-pointer"
-              >
-                Redes sociales
-              </li>
-            </ul>
+                <li
+                  onClick={() => { router.push("/favoritos"); setMenuOpen(false); }}
+                  className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+                >
+                  <span className="menu-emoji">⭐</span> Favoritos
+                </li>
+                <li
+                  onClick={() => { router.push("/calendario"); setMenuOpen(false); }}
+                  className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+                >
+                  <span className="menu-emoji">📅</span> Calendario
+                </li>
+                <li
+                  onClick={() => { router.push("/notificaciones"); setMenuOpen(false); }}
+                  className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+                >
+                  <span className="menu-emoji">🔔</span> Notificaciones
+                </li>
+                <li
+                  onClick={() => { router.push("/comentarios/nuevo"); setMenuOpen(false); }}
+                  className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+                >
+                  <span className="menu-emoji">📝</span> Dejar Comentario
+                </li>
+                {userLoaded && usuarioLogueado.rol === "ADMIN" && (
+                  <li
+                    onClick={() => { router.push("/estadistica"); setMenuOpen(false); }}
+                    className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+                  >
+                    <span className="menu-emoji">📊</span> Estadística
+                  </li>
+                )}
+                <li
+                  onClick={() => { window.open("/redes-sociales", "_blank"); setMenuOpen(false); }}
+                  className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+                >
+                  <span className="menu-emoji">🌐</span> Redes sociales
+                </li>
+              </ul>
+            </div>
           </nav>
-        )}
+        </div>
 
         {/* Contenido principal: pantalla de lugares */}
         <main className="p-4">
-          <h2 className="text-2xl font-bold mb-4">Lugares Turísticos</h2>
+          <h2 className="page-title">Lugares Turísticos</h2>
           {/* Botón solo para administrador */}
           {userLoaded && usuarioLogueado.rol === "ADMIN" && (
             <button
-              className="bg-green-600 text-white px-4 py-2 rounded mb-4"
+              className="btn-register"
               onClick={() => router.push("/lugares/nuevo")}
             >
               Registrar lugar
