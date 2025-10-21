@@ -319,47 +319,49 @@ export async function DELETE(req: NextRequest, context: any = {}) {
     }
 
     // 4) intentar delete físico en el modelo de reseña
-    try {
-      // --- NUEVO: inspección rápida en tablas candidatas para diagnóstico ---
-      const tableCandidates = ['"Reseña"', '"resena"', '"resenas"', "resena", "resenas", "Resena", "review", "reviews"];
-      const rawPresence: Record<string, any> = {};
-      for (const t of tableCandidates) {
+        // preparar variable fuera del try para estar disponible en el catch para diagnóstico
+        let rawPresence: Record<string, any> | undefined = undefined;
         try {
-          // usar $queryRawUnsafe solo para diagnóstico (resenaId es Number)
-          const rows = await prisma.$queryRawUnsafe(`SELECT * FROM ${t} WHERE id = ${Number(resenaId)} LIMIT 1`).catch(() => null);
-          rawPresence[t] = Array.isArray(rows) ? (rows.length > 0 ? rows[0] : null) : rows;
-        } catch (selErr) {
-          rawPresence[t] = null;
+          // --- NUEVO: inspección rápida en tablas candidatas para diagnóstico ---
+          const tableCandidates = ['"Reseña"', '"resena"', '"resenas"', "resena", "resenas", "Resena", "review", "reviews"];
+          rawPresence = {};
+          for (const t of tableCandidates) {
+            try {
+              // usar $queryRawUnsafe solo para diagnóstico (resenaId es Number)
+              const rows = await prisma.$queryRawUnsafe(`SELECT * FROM ${t} WHERE id = ${Number(resenaId)} LIMIT 1`).catch(() => null);
+              rawPresence[t] = Array.isArray(rows) ? (rows.length > 0 ? rows[0] : null) : rows;
+            } catch (selErr) {
+              rawPresence[t] = null;
+            }
+          }
+          console.log("DELETE /api/resenas - raw presence check:", rawPresence);
+    
+          await resenaModel.delete({ where: { id: resenaId } });
+          return NextResponse.json({ ok: true });
+        } catch (deleteErr: any) {
+          // Logging y respuesta diagnóstica ampliada
+          console.error("DELETE /api/resenas - delete fallo:", deleteErr);
+          const code = deleteErr?.code ?? null;
+          const message = String(deleteErr?.message ?? deleteErr ?? "Error al eliminar reseña");
+    
+          // Respuesta con detalle limitado; stack solo en dev
+          const payload: any = { error: message.slice(0, 1000), code };
+          try {
+            // incluir hint de tablas donde la fila fue encontrada (puede ayudar)
+            payload.rawPresence = typeof rawPresence !== "undefined" ? rawPresence : null;
+          } catch {}
+          if (process.env.NODE_ENV !== "production") {
+            payload.stack = deleteErr?.stack ? String(deleteErr.stack).slice(0, 2000) : undefined;
+          }
+    
+          // Si parece FK, devolver 409 para que el cliente lo trate como conflicto de dependencias
+          const low = message.toLowerCase();
+          if (low.includes("foreign") || String(code).toLowerCase().includes("p2003") || low.includes("constraint")) {
+            return NextResponse.json({ ...payload, error: "No se pudo eliminar: existen registros relacionados." }, { status: 409 });
+          }
+    
+          return NextResponse.json(payload, { status: 500 });
         }
-      }
-      console.log("DELETE /api/resenas - raw presence check:", rawPresence);
-
-      await resenaModel.delete({ where: { id: resenaId } });
-      return NextResponse.json({ ok: true });
-    } catch (deleteErr: any) {
-      // Logging y respuesta diagnóstica ampliada
-      console.error("DELETE /api/resenas - delete fallo:", deleteErr);
-      const code = deleteErr?.code ?? null;
-      const message = String(deleteErr?.message ?? deleteErr ?? "Error al eliminar reseña");
-
-      // Respuesta con detalle limitado; stack solo en dev
-      const payload: any = { error: message.slice(0, 1000), code };
-      try {
-        // incluir hint de tablas donde la fila fue encontrada (puede ayudar)
-        payload.rawPresence = typeof rawPresence !== "undefined" ? rawPresence : null;
-      } catch {}
-      if (process.env.NODE_ENV !== "production") {
-        payload.stack = deleteErr?.stack ? String(deleteErr.stack).slice(0, 2000) : undefined;
-      }
-
-      // Si parece FK, devolver 409 para que el cliente lo trate como conflicto de dependencias
-      const low = message.toLowerCase();
-      if (low.includes("foreign") || String(code).toLowerCase().includes("p2003") || low.includes("constraint")) {
-        return NextResponse.json({ ...payload, error: "No se pudo eliminar: existen registros relacionados." }, { status: 409 });
-      }
-
-      return NextResponse.json(payload, { status: 500 });
-    }
   } catch (err: any) {
     console.error("DELETE /api/resenas unexpected error:", err);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });

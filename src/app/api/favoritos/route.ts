@@ -59,6 +59,42 @@ function resolveFavoritoModel(prismaClient: any) {
 	return null;
 }
 
+/* Util: buscar un Lugar por id en modelos comunes o por consulta raw si hace falta */
+async function findLugarById(id: number): Promise<any | null> {
+	try {
+		if (!Number.isFinite(id) || id <= 0) return null;
+		const candidates = ["lugar", "lugares", "Lugar", "Lugares"];
+		for (const name of candidates) {
+			const m = (prisma as any)[name];
+			if (!m) continue;
+			// try findUnique / findFirst if available
+			if (typeof m.findUnique === "function") {
+				const r = await m.findUnique({ where: { id } }).catch(() => null);
+				if (r) return r;
+			}
+			if (typeof m.findFirst === "function") {
+				const r = await m.findFirst({ where: { id } }).catch(() => null);
+				if (r) return r;
+			}
+		}
+
+		// fallback raw query against a table named 'lugares' or 'lugar'
+		try {
+			const rows = await prisma.$queryRawUnsafe?.(`SELECT * FROM lugares WHERE id = ${Number(id)} LIMIT 1`) ?? [];
+			if (Array.isArray(rows) && rows.length > 0) return rows[0];
+		} catch (e) { /* ignore */ }
+
+		try {
+			const rows2 = await prisma.$queryRawUnsafe?.(`SELECT * FROM "lugar" WHERE id = ${Number(id)} LIMIT 1`) ?? [];
+			if (Array.isArray(rows2) && rows2.length > 0) return rows2[0];
+		} catch (e) { /* ignore */ }
+
+		return null;
+	} catch (e) {
+		return null;
+	}
+}
+
 /* DELETE handler robusto: acepta /api/favoritos/:id o DELETE /api/favoritos with { lugarId } */
 export async function DELETE(req: NextRequest, context: any = {}) {
 	try {
@@ -219,5 +255,91 @@ export async function GET(req: NextRequest) {
 	} catch (err: any) {
 		console.error("GET /api/favoritos unexpected error:", err);
 		return NextResponse.json({ error: "Error interno" }, { status: 500 });
+	}
+}
+
+/* POST: agregar un lugar a favoritos para el usuario autenticado */
+export async function POST(req: NextRequest) {
+	try {
+		// resolver usuario
+		const userId = await getUserIdFromReq(req);
+		if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+		// body
+ 		let body: any = {};
+		try { body = await req.json().catch(() => ({})); } catch {}
+		const lugarIdRaw = body?.lugarId ?? body?.id ?? null;
+		if (lugarIdRaw === null) return NextResponse.json({ error: "falta lugarId en petición" }, { status: 400 });
+		const lugarId = Number(lugarIdRaw);
+		if (!Number.isFinite(lugarId) || lugarId <= 0) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+
+		// opcional: comprobar que el lugar existe (no estrictamente necesario)
+		const lugarExists = await findLugarById(lugarId).catch(() => null);
+		if (!lugarExists) {
+			// permitir creación incluso si no se encuentra el lugar para compatibilidad, pero advertir
+			// return NextResponse.json({ error: "Lugar no encontrado" }, { status: 404 });
+		}
+
+		const favModel = resolveFavoritoModel(prisma);
+		// comprobar duplicado
+		if (favModel && typeof favModel.findFirst === "function") {
+			const existing = await favModel.findFirst({ where: { usuarioId: userId, lugarId } }).catch(() => null);
+			if (existing) return NextResponse.json({ error: "Favorito ya existe", favorito: existing }, { status: 409 });
+		}
+
+		// intentar crear con prisma
+		let created: any = null;
+		if (favModel && typeof favModel.create === "function") {
+			try {
+				created = await favModel.create({ data: { usuarioId: userId, lugarId }, include: { lugar: true } }).catch(async (e: any) => {
+					// algunos modelos no aceptan include; intentar sin include
+					try { return await favModel.create({ data: { usuarioId: userId, lugarId } }); } catch (_) { throw e; }
+				});
+			} catch (e: any) {
+				console.error("POST /api/favoritos prisma.create fallo:", e?.message ?? e);
+				created = null;
+			}
+		}
+
+		// fallback raw SQL (Postgres) si no hay modelo prisma o falló
+		if (!created && !favModel) {
+			try {
+				const rows = await prisma.$queryRawUnsafe?.(
+					`INSERT INTO "Favorito" ("usuarioId","lugarId") VALUES (${Number(userId)}, ${Number(lugarId)}) RETURNING *`
+				) ?? null;
+				if (Array.isArray(rows) && rows.length > 0) created = rows[0];
+			} catch (e) {
+				try {
+					// intentar tabla 'favoritos' lowercase
+					const rows2 = await prisma.$queryRawUnsafe?.(
+						`INSERT INTO favoritos ("usuarioId","lugarId") VALUES (${Number(userId)}, ${Number(lugarId)}) RETURNING *`
+					) ?? null;
+					if (Array.isArray(rows2) && rows2.length > 0) created = rows2[0];
+				} catch (e2) {
+					console.error("POST /api/favoritos raw insert fallo:", e2);
+				}
+			}
+		}
+
+		// si no se creó, intentar crear con executeRaw (sin RETURNING) y devolver un objeto simple
+		if (!created) {
+			try {
+				const exec = await prisma.$executeRawUnsafe?.(
+					`INSERT INTO favoritos ("usuarioId","lugarId") VALUES (${Number(userId)}, ${Number(lugarId)})`
+				) ?? null;
+				if (exec !== null) {
+					created = { usuarioId: Number(userId), lugarId: Number(lugarId) };
+				}
+			} catch (e) {
+				console.error("POST /api/favoritos fallback executeRaw fallo:", e);
+			}
+		}
+
+		if (!created) return NextResponse.json({ error: "No se pudo crear favorito" }, { status: 500 });
+
+		return NextResponse.json({ ok: true, favorito: created }, { status: 201 });
+	} catch (err: any) {
+		console.error("POST /api/favoritos unexpected error:", err);
+		return NextResponse.json({ error: err?.message ?? "Error interno" }, { status: 500 });
 	}
 }
