@@ -13,6 +13,7 @@ export default function FavoritosPage() {
   const router = useRouter();
   const [favoritos, setFavoritos] = useState<Lugar[]>([]);
   const [error, setError] = useState("");
+  const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
   useEffect(() => {
     fetch("/api/favoritos", { credentials: "include" })
@@ -42,17 +43,44 @@ export default function FavoritosPage() {
   }, []);
 
   const handleEliminar = async (lugarId: number) => {
+    if (deletingIds.includes(lugarId)) return;
+    setError("");
+    setDeletingIds(prev => [...prev, lugarId]);
     try {
-      const res = await fetch("/api/favoritos", {
+      // 1) intentar DELETE por ruta /api/favoritos/{id}
+      let res = await fetch(`/api/favoritos/${encodeURIComponent(lugarId)}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ lugarId }),
-      });
-      if (!res.ok) throw new Error("No se pudo eliminar favorito");
-      setFavoritos(favoritos.filter(l => l.id !== lugarId));
-    } catch {
-      setError("Error al eliminar favorito");
+      }).catch(() => null);
+
+      // 2) si no existe esa ruta o falló, intentar DELETE con body como fallback
+      if (!res || !res.ok) {
+        res = await fetch("/api/favoritos", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ lugarId }),
+        }).catch(() => null);
+      }
+
+      // parseo robusto de respuesta
+      let data: any = {};
+      if (res) {
+        const text = await res.text().catch(() => "");
+        try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+      }
+
+      if (res && res.ok) {
+        setFavoritos(prev => prev.filter(l => l.id !== lugarId));
+      } else {
+        const msg = data?.error || data?.message || "No se pudo eliminar favorito";
+        setError(String(msg));
+      }
+    } catch (err) {
+      console.error("Network error quitando favorito:", err);
+      setError("Error de conexión al eliminar favorito");
+    } finally {
+      setDeletingIds(prev => prev.filter(id => id !== lugarId));
     }
   };
 
@@ -95,13 +123,14 @@ export default function FavoritosPage() {
                 {l.nombre}
               </div>
               <button
-                className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded"
+                className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded disabled:opacity-50"
                 onClick={e => {
                   e.stopPropagation();
                   handleEliminar(l.id);
                 }}
+                disabled={deletingIds.includes(l.id)}
               >
-                Quitar
+                {deletingIds.includes(l.id) ? "..." : "Quitar"}
               </button>
             </div>
           ))}

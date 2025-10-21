@@ -252,3 +252,116 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Error al actualizar reseña" }, { status: 500 });
   }
 }
+
+/* DELETE: eliminar reseña (autor o ADMIN) */
+export async function DELETE(req: NextRequest, context: any = {}) {
+  try {
+    // 1) obtener id desde params (App Router), query, path o body
+    let idRaw: any = null;
+    try { const ctx = await context; idRaw = ctx?.params?.id ?? null; } catch {}
+    if (!idRaw) idRaw = req.nextUrl?.searchParams?.get("id") ?? null;
+    if (!idRaw) {
+      const pathname = typeof req.url === "string" ? new URL(req.url).pathname : "";
+      idRaw = pathname.split("/").filter(Boolean).pop();
+    }
+    if (!idRaw) {
+      try { const body = await req.json().catch(() => ({})); idRaw = body?.id ?? body?.resenaId ?? null; } catch {}
+    }
+    const resenaId = Number(idRaw);
+    if (!Number.isFinite(resenaId) || resenaId <= 0) {
+      return NextResponse.json({ error: "reseña id inválido" }, { status: 400 });
+    }
+
+    // 2) resolver usuario y comprobar autorización
+    const userId = await getUserIdFromReq(req);
+    if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+    const resenaModel = resolveResenaModel(prisma);
+    if (!resenaModel) {
+      return NextResponse.json({ error: "Modelo de reseña no encontrado en Prisma" }, { status: 500 });
+    }
+
+    const existente = await resenaModel.findUnique({ where: { id: resenaId } });
+    if (!existente) return NextResponse.json({ error: "Reseña no encontrada" }, { status: 404 });
+
+    if (Number(existente.usuarioId) !== Number(userId)) {
+      const usuario = await prisma.usuario.findUnique({ where: { id: userId } });
+      if (!usuario || String(usuario.rol).toUpperCase() !== "ADMIN") {
+        return NextResponse.json({ error: "No autorizado para eliminar esta reseña" }, { status: 403 });
+      }
+    }
+
+    // 3) intentar limpiar dependencias comunes que puedan causar FK constraint
+    const candidateDeletes = [
+      { model: "respuesta", field: "resenaId" },
+      { model: "respuestas", field: "resenaId" },
+      { model: "like", field: "resenaId" },
+      { model: "likes", field: "resenaId" },
+      { model: "imagen", field: "resenaId" },
+      { model: "imagenes", field: "resenaId" },
+      { model: "favorito", field: "resenaId" },
+      { model: "favoritos", field: "resenaId" },
+      { model: "comentario", field: "resenaId" },
+      { model: "comentarios", field: "resenaId" },
+    ];
+    for (const c of candidateDeletes) {
+      try {
+        const m = (prisma as any)[c.model];
+        if (m && typeof m.deleteMany === "function") {
+          await m.deleteMany({ where: { [c.field]: resenaId } }).catch(() => null);
+        } else {
+          // fallback raw (silencioso) - no rompe si tabla inexistente
+          await prisma.$executeRawUnsafe?.(`DELETE FROM ${String(c.model)} WHERE ${String(c.field)} = ${resenaId}`).catch(() => null);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    // 4) intentar delete físico en el modelo de reseña
+    try {
+      // --- NUEVO: inspección rápida en tablas candidatas para diagnóstico ---
+      const tableCandidates = ['"Reseña"', '"resena"', '"resenas"', "resena", "resenas", "Resena", "review", "reviews"];
+      const rawPresence: Record<string, any> = {};
+      for (const t of tableCandidates) {
+        try {
+          // usar $queryRawUnsafe solo para diagnóstico (resenaId es Number)
+          const rows = await prisma.$queryRawUnsafe(`SELECT * FROM ${t} WHERE id = ${Number(resenaId)} LIMIT 1`).catch(() => null);
+          rawPresence[t] = Array.isArray(rows) ? (rows.length > 0 ? rows[0] : null) : rows;
+        } catch (selErr) {
+          rawPresence[t] = null;
+        }
+      }
+      console.log("DELETE /api/resenas - raw presence check:", rawPresence);
+
+      await resenaModel.delete({ where: { id: resenaId } });
+      return NextResponse.json({ ok: true });
+    } catch (deleteErr: any) {
+      // Logging y respuesta diagnóstica ampliada
+      console.error("DELETE /api/resenas - delete fallo:", deleteErr);
+      const code = deleteErr?.code ?? null;
+      const message = String(deleteErr?.message ?? deleteErr ?? "Error al eliminar reseña");
+
+      // Respuesta con detalle limitado; stack solo en dev
+      const payload: any = { error: message.slice(0, 1000), code };
+      try {
+        // incluir hint de tablas donde la fila fue encontrada (puede ayudar)
+        payload.rawPresence = typeof rawPresence !== "undefined" ? rawPresence : null;
+      } catch {}
+      if (process.env.NODE_ENV !== "production") {
+        payload.stack = deleteErr?.stack ? String(deleteErr.stack).slice(0, 2000) : undefined;
+      }
+
+      // Si parece FK, devolver 409 para que el cliente lo trate como conflicto de dependencias
+      const low = message.toLowerCase();
+      if (low.includes("foreign") || String(code).toLowerCase().includes("p2003") || low.includes("constraint")) {
+        return NextResponse.json({ ...payload, error: "No se pudo eliminar: existen registros relacionados." }, { status: 409 });
+      }
+
+      return NextResponse.json(payload, { status: 500 });
+    }
+  } catch (err: any) {
+    console.error("DELETE /api/resenas unexpected error:", err);
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
+}
