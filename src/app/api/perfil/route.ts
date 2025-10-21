@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 async function getUserIdFromReq(req: NextRequest): Promise<number | null> {
   try {
@@ -71,13 +72,14 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const body = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
     // Aceptar campos comunes: nombre, correo, telefono, foto, descripcion (ajusta según tu modelo)
     const nombre = typeof body.nombre === "string" ? body.nombre.trim() : undefined;
     const correo = typeof body.correo === "string" ? body.correo.trim() : undefined;
     const telefono = typeof body.telefono === "string" ? body.telefono.trim() : undefined;
     const foto = typeof body.foto === "string" ? body.foto.trim() : undefined;
     const descripcion = typeof body.descripcion === "string" ? body.descripcion.trim() : undefined;
+  const password = typeof body.password === "string" ? body.password : undefined;
 
     const updates: any = {};
     if (typeof nombre === "string" && nombre.length) updates.nombre = nombre;
@@ -86,7 +88,8 @@ export async function PUT(req: NextRequest) {
     if (typeof foto === "string") updates.foto = foto;
     if (typeof descripcion === "string") updates.descripcion = descripcion;
 
-    if (Object.keys(updates).length === 0) {
+    // manejar password por separado (no incluirla en `updates` en texto plano)
+    if (!password && Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "Nada para actualizar" }, { status: 400 });
     }
 
@@ -96,9 +99,18 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
     }
 
-    // prevenir cambios no permitidos (por ejemplo rol, password) -- no incluimos esos campos en updates
+    // prevenir cambios no permitidos (por ejemplo rol) -- password se maneja aparte y se guarda hasheada
 
-    // actualizar en DB
+    // si hay password, validarlo y hashearlo
+    if (password) {
+      if (password.length < 6) {
+        return NextResponse.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 });
+      }
+      const hashed = await bcrypt.hash(password, 10);
+      updates.password = hashed;
+    }
+
+    // actualizar en DB (incluye password hasheada si se proporcionó)
     const actualizado = await prisma.usuario.update({
       where: { id: userId },
       data: updates,
