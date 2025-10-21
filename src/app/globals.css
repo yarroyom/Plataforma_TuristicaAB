@@ -494,13 +494,10 @@ canvas { max-width: 100% !important; height: 100% !important; }
   width: 0;
   max-width: 320px; /* ancho final */
   overflow: hidden;
-  /* fondo: imagen personalizada (Dilan) con overlay por encima para contraste.
-     Se mantiene el degradado como fallback/mezcla ligera. */
-  background: linear-gradient(180deg, rgba(223,247,168,0.22), rgba(163,230,53,0.14)); /* fallback suave */
-  background-image: url('/images/lugares/Dilan.jpeg');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
+  /* Fondo neutro: quitar imagen y usar negro translúcido para que el drawer sea siempre legible
+     y coherente entre móvil y desktop. */
+  background-color: rgba(0,0,0,0.62);
+  background-image: none !important;
   /* capamos la imagen con un pseudo-elemento ::before para añadir overlay sin afectar a los elementos internos */
   box-shadow: 2px 0 12px rgba(0,0,0,0.12);
   transform: translateX(-100%); /* oculto por defecto (fuera de la pantalla) */
@@ -515,8 +512,9 @@ canvas { max-width: 100% !important; height: 100% !important; }
   content: '';
   position: absolute;
   inset: 0;
-  /* Overlay muy oscuro para que la imagen quede como marca de agua casi imperceptible */
-  background: linear-gradient(180deg, rgba(0,0,0,0.92), rgba(0,0,0,0.82));
+  /* Desactivamos overlay de la imagen: dejamos transparente para evitar dobles capas
+     (el fondo ahora es un negro translúcido en el propio contenedor). */
+  background: transparent;
   z-index: 0;
   pointer-events: none;
 }
@@ -565,7 +563,7 @@ canvas { max-width: 100% !important; height: 100% !important; }
   display:flex;
   align-items:center;
   justify-content:space-between;
-  color: rgba(255,255,255,0.96); /* texto claro para legibilidad sobre la foto */
+  color: rgba(255,255,255,0.98); /* texto claro para legibilidad sobre fondo negro translúcido */
   text-shadow: 0 2px 10px rgba(0,0,0,0.55);
 }
 .side-drawer .drawer-body {
@@ -576,7 +574,7 @@ canvas { max-width: 100% !important; height: 100% !important; }
 .side-drawer a, .side-drawer button {
   display: block;
   padding: 0.6rem 0.75rem;
-  color: rgba(255,255,255,0.96); /* texto claro sobre overlay */
+  color: rgba(255,255,255,0.96); /* texto claro sobre fondo negro translúcido */
   text-decoration: none;
   font-size: 0.95rem;
   border-radius: 6px;
@@ -643,12 +641,14 @@ canvas { max-width: 100% !important; height: 100% !important; }
 .side-drawer a[aria-current="page"],
 .side-drawer a.active,
 .side-drawer a:focus {
-  /* verde limón visible para destacar el item seleccionado */
-  background: linear-gradient(90deg, rgba(220,252,231,0.95), rgba(250,249,231,0.95)) !important; /* lime-ish */
-  border-left: 4px solid rgba(34,197,94,0.98) !important; /* verde intenso */
-  color: #0b3a03 !important; /* texto oscuro sobre fondo limón */
+  /* Rectángulo verde-limón detrás del texto para destacar el item seleccionado.
+     Usamos un background sólido semi-opa y mantemos el texto oscuro para contraste. */
+  background: rgba(163,230,53,0.98) !important; /* verde-limón fuerte */
+  padding-left: 0.75rem !important;
+  border-left: 4px solid rgba(34,197,94,0.98) !important;
+  color: #062e03 !important; /* texto oscuro sobre limón */
   font-weight: 700 !important;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 10px 30px rgba(0,0,0,0.5) !important;
+  box-shadow: none !important;
   transform: translateX(0);
   transition: background .18s ease, border-left .18s ease, box-shadow .18s ease, transform .12s ease;
 }
@@ -660,7 +660,7 @@ canvas { max-width: 100% !important; height: 100% !important; }
   /* emoji con fondo blanco y el icono en verde oscuro para contraste */
   background: #ffffff !important;
   color: #0b3a03 !important;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.45) !important;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.45) !important;
 }
 
 /* Evitar que haya elementos con fondo blanco dentro del drawer que oculten el texto */
