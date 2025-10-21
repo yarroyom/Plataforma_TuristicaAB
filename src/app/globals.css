@@ -886,24 +886,25 @@ header button {
 		-webkit-text-fill-color: #0b2730 !important;
 	}
 
-	/* Asegurar que overlays no atenúen el texto (excluye pseudo-elementos de login/register) */
-	.site-logo, .side-backdrop, .backdrop, .overlay, .dropdown-menu {
-		opacity: 1 !important;
-		mix-blend-mode: normal !important;
-		filter: none !important;
-		background: transparent !important;
-		pointer-events: none !important;
-	}
+  /* Asegurar que overlays no atenúen el texto (excluye pseudo-elementos de login/register)
+     Nota: NO incluimos aquí .side-backdrop ni .dropdown-menu porque necesitan conservar su
+     fondo y comportamiento interactivo en móvil (backdrop y menús desplegables). */
+  .site-logo, .backdrop, .overlay {
+    opacity: 1 !important;
+    mix-blend-mode: normal !important;
+    filter: none !important;
+    /* No forzamos background/pointer-events para elementos interactivos */
+  }
 
-	/* Fondos de tarjetas y la mayoría de componentes totalmente opacos para contraste.
-	   NOTA: no incluimos .login-page ni .register-page aquí para preservar su fondo degradado. */
-	.card, .bg-white, .dropdown-menu, nav, .side-drawer, .principal-page, .emprendedores-page, .lugares-page {
-		background-color: #ffffff !important;
-		background: #ffffff !important;
-		opacity: 1 !important;
-		backdrop-filter: none !important;
-		box-shadow: 0 6px 18px rgba(0,0,0,0.06) !important;
-	}
+  /* Fondos de tarjetas y la mayoría de componentes totalmente opacos para contraste.
+     Excluimos elementos que deben mantener su fondo (ej. menus laterales y páginas temáticas). */
+  .card, .bg-white, nav, .principal-page, .lugares-page {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06) !important;
+  }
 
 	/* Inputs / textarea / selects: texto visible y caret claro */
 	input, textarea, select, .input, .form-control {
