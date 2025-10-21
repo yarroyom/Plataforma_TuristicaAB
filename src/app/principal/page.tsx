@@ -121,38 +121,35 @@ export default function Principal() {
         .map((l) => (
           <div
             key={l.id}
-            className="card-lugar bg-white rounded shadow hover:shadow-lg overflow-hidden relative cursor-pointer"
+            className="card-lugar bg-white rounded shadow hover:shadow-lg overflow-hidden cursor-pointer card-lugar-row"
             onClick={() => router.push(`/lugares/${l.id}`)}
           >
-            {l.imagen_url ? (
-              <img
-                src={l.imagen_url}
-                alt={l.nombre}
-                className="card-lugar-img w-full h-36 object-cover"
-              />
-            ) : (
-              <div className="card-lugar-img w-full h-36 bg-gray-100 flex items-center justify-center text-gray-400">
-                Sin imagen
-              </div>
-            )}
-            <div className="p-3">
-              <div className="font-semibold text-sm text-blue-600 hover:underline">
-                {l.nombre}
+            <div className="card-lugar-thumb">
+              {l.imagen_url ? (
+                <img src={l.imagen_url} alt={l.nombre} className="w-full h-full object-cover rounded-l" />
+              ) : (
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">Sin imagen</div>
+              )}
+            </div>
+            <div className="card-lugar-body">
+              <div className="font-semibold text-sm text-blue-600 hover:underline mb-1">{l.nombre}</div>
+              {/* espacio para descripción o meta si se quiere */}
+              <div className="flex items-center justify-between mt-auto">
+                <div className="text-xs text-gray-500">&nbsp;</div>
+                {userLoaded && usuarioLogueado.rol === "ADMIN" && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEliminar(l.id);
+                    }}
+                    className="btn-delete-pill"
+                    title="Eliminar lugar"
+                  >
+                    Eliminar
+                  </button>
+                )}
               </div>
             </div>
-
-            {userLoaded && usuarioLogueado.rol === "ADMIN" && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEliminar(l.id);
-                }}
-                className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-xs"
-                title="Eliminar lugar"
-              >
-                Eliminar
-              </button>
-            )}
           </div>
         )));
 
@@ -239,13 +236,13 @@ export default function Principal() {
             <img src="/images/lugares/AB.jpeg" alt="Logo Agua Blanca" className="site-logo" />
             <button
               onClick={() => router.push("/perfil")}
-              className="bg-gray-200 text-blue-700 px-3 py-1 rounded"
+              className="header-action bg-gray-200 text-blue-700 px-3 py-1 rounded"
             >
               Cuenta
             </button>
             <button
               onClick={handleLogout}
-              className="btn-logout"
+              className="btn-logout header-action"
             >
               Cerrar sesión
             </button>

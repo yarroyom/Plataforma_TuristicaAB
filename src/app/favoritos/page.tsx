@@ -85,8 +85,9 @@ export default function FavoritosPage() {
   };
 
   return (
-    <div className="emprendedores-page py-8 p-4">
-      <div className="container max-w-4xl mx-auto">
+    <div className="favoritos-page py-8 p-4">
+      <div className="favoritos-bg">
+        <div className="container max-w-4xl mx-auto">
         {/* Botón regresar a la página anterior */}
         <div className="mb-4">
           <button
@@ -109,7 +110,7 @@ export default function FavoritosPage() {
           {favoritos.map(l => (
             <div
               key={l.id}
-              className="w-48 text-center cursor-pointer hover:shadow-lg relative"
+              className="favorito-card glass w-48 text-center cursor-pointer hover:shadow-lg relative"
               onClick={() => router.push(`/lugares/${l.id}`)}
             >
               {l.imagen_url && (
@@ -137,5 +138,6 @@ export default function FavoritosPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }

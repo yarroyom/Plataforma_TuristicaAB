@@ -241,6 +241,179 @@ canvas { max-width: 100% !important; height: 100% !important; }
   .corner-ribbon { display:none; }
 }
 
+/* Fondo específico para la página de emprendedores: imagen y overlay */
+.emprendedores-bg {
+  position: relative;
+  padding: 2rem 0; /* espacio vertical para el contenido */
+  background: transparent;
+}
+.emprendedores-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* la imagen está en public/images/lugares */
+  background-image: url('/images/lugares/emprendimiento.jpg');
+  background-size: cover;
+  background-position: center center;
+  /* Marca de agua: muy baja presencia visual */
+  opacity: 0.12; /* antes 0.28 */
+  filter: saturate(0.85) contrast(0.95) blur(0.6px);
+  z-index: 0;
+}
+.emprendedores-bg > .container { position: relative; z-index: 2; }
+
+/* Variante glass para las tarjetas de negocio: usa backdrop-filter para desenfoque */
+.negocio-card.glass {
+  background: rgba(255,255,255,0.64);
+  border: 1px solid rgba(11,58,3,0.06);
+  box-shadow: 0 8px 30px rgba(6,30,12,0.08);
+  backdrop-filter: blur(6px) saturate(1.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .negocio-card.glass {
+    background: rgba(6,6,6,0.48);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+}
+
+/* Fondo para la página de Favoritos (iglesia) */
+.favoritos-bg {
+  position: relative;
+  padding: 2rem 0;
+  min-height: 320px; /* asegura que el área tenga altura mínima visible */
+  background: transparent;
+}
+.favoritos-bg::before {
+  /* usar fixed para cubrir toda la ventana (full-bleed) */
+  content: '';
+  position: fixed;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
+  background-image: url('/images/lugares/iglesia.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  /* Marca de agua sutil */
+  opacity: 0.14; /* antes 0.26 */
+  filter: saturate(0.85) contrast(0.95) blur(0.6px);
+  z-index: 0;
+  pointer-events: none;
+}
+.favoritos-bg > .container { position: relative; z-index: 2; }
+
+/* Variante glass específica para tarjetas de favoritos */
+.favorito-card.glass {
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(11,58,3,0.06);
+  box-shadow: 0 10px 30px rgba(6,30,12,0.08);
+  backdrop-filter: blur(6px) saturate(1.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .favorito-card.glass { background: rgba(6,6,6,0.5); border: 1px solid rgba(255,255,255,0.04); }
+}
+
+/* Calendar responsive rules */
+.calendar-wrapper {
+  overflow: auto; /* permite scroll horizontal en pantallas pequeñas */
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1rem;
+}
+.calendar-grid { min-width: 700px; } /* ancho base para 7 columnas */
+.calendar-weekday { padding: 0.25rem 0; }
+.calendar-cell { min-width: 100px; }
+
+/* Mobile: permitir que la grilla sea compacta con scroll horizontal y celdas más pequeñas */
+@media (max-width: 640px) {
+  .calendar-grid { min-width: 560px; font-size: 0.85rem; }
+  .calendar-cell { min-width: 80px; min-height: 72px; padding: 0.5rem; }
+  .calendar-cell .truncate { max-width: 120px; }
+  .calendar-wrapper { padding-left: 0.5rem; padding-right: 0.5rem; }
+}
+
+/* Tablet / desktop: aumentar densidad y altura de celdas */
+@media (min-width: 1024px) {
+  .calendar-grid { min-width: 100%; grid-template-columns: repeat(7, 1fr); }
+  .calendar-cell { min-height: 110px; }
+  .calendar-wrapper { overflow: visible; }
+}
+
+/* Mejora visual de eventos en celda: truncado y hover */
+.calendar-cell .flex .truncate { display: inline-block; max-width: 100%; }
+.calendar-cell:hover { transform: translateY(-4px); }
+
+/* Notificaciones: diseño moderno y accesible */
+.noti-list { display: block; }
+.noti-item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(6,30,12,0.06);
+  box-shadow: 0 8px 22px rgba(6,30,12,0.06);
+  backdrop-filter: blur(6px) saturate(1.02);
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+.noti-item:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(6,30,12,0.12); }
+.noti-icon {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 10px;
+  background: linear-gradient(180deg,#f7fdfa,#ecfdf5);
+  display:flex; align-items:center; justify-content:center; font-size:1.25rem;
+  border: 1px solid rgba(6,30,12,0.04);
+}
+.noti-content { flex: 1; min-width: 0; }
+.noti-title { font-weight:700; color: #0b61a8; margin-bottom:0.35rem; }
+.noti-body { color: #334155; line-height:1.4; }
+.noti-date { color: #94a3b8; font-size:0.82rem; margin-top:0.5rem; }
+
+/* Slight variant for event vs negocio (color accents) */
+.noti-item[data-type="negocio"] .noti-icon { background: linear-gradient(180deg,#fff7ed,#fff5f0); }
+.noti-item[data-type="evento"] .noti-icon { background: linear-gradient(180deg,#f0f9ff,#eef7ff); }
+
+/* Responsive: en móvil apilar icono encima del contenido */
+@media (max-width: 640px) {
+  .noti-item { flex-direction: row; gap: 0.8rem; padding: 0.85rem; }
+  .noti-icon { width:48px; height:48px; min-width:48px; font-size:1rem; }
+}
+
+@media (max-width: 420px) {
+  .noti-item { flex-direction: column; align-items: stretch; }
+  .noti-icon { align-self: flex-start; }
+}
+
+/* Bell icon next to the Notificaciones title */
+.noti-bell {
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #0b61a8;
+  transition: background .12s ease, transform .12s ease;
+}
+.noti-bell:hover { background: rgba(11,97,168,0.08); transform: translateY(-2px); }
+.noti-bell:active { transform: translateY(0); }
+
+/* delete pill for notifications */
+.noti-delete {
+  background: #ef4444; /* red-500 */
+  color: white;
+  border: none;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.noti-delete:disabled { opacity: 0.6; cursor: not-allowed; }
+
 /* Dropdown lateral: el contenedor debe tener class="dropdown" y el menú class="dropdown-menu" */
 .dropdown {
   position: relative;
@@ -321,14 +494,37 @@ canvas { max-width: 100% !important; height: 100% !important; }
   width: 0;
   max-width: 320px; /* ancho final */
   overflow: hidden;
-  /* fondo limón para el drawer (claro -> vivo) */
-  background: linear-gradient(180deg, #DFF7A8, #A3E635); /* claro limón -> limón vivo */
+  /* fondo: imagen personalizada (Dilan) con overlay por encima para contraste.
+     Se mantiene el degradado como fallback/mezcla ligera. */
+  background: linear-gradient(180deg, rgba(223,247,168,0.22), rgba(163,230,53,0.14)); /* fallback suave */
+  background-image: url('/images/lugares/Dilan.jpeg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  /* capamos la imagen con un pseudo-elemento ::before para añadir overlay sin afectar a los elementos internos */
   box-shadow: 2px 0 12px rgba(0,0,0,0.12);
   transform: translateX(-100%); /* oculto por defecto (fuera de la pantalla) */
   transition: transform .28s cubic-bezier(.2,.8,.2,1), width .2s ease;
   z-index: 60;
   display: flex;
   flex-direction: column;
+}
+
+/* Pseudo-elemento que añade un overlay oscuro suave sobre la imagen para mejorar contraste */
+.side-drawer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Overlay muy oscuro para que la imagen quede como marca de agua casi imperceptible */
+  background: linear-gradient(180deg, rgba(0,0,0,0.92), rgba(0,0,0,0.82));
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Asegurar que el contenido del drawer se renderice por encima del overlay */
+.side-drawer > * {
+  position: relative;
+  z-index: 2;
 }
 
 /* Cuando está abierto: se posiciona en pantalla completa del ancho definido */
@@ -365,11 +561,12 @@ canvas { max-width: 100% !important; height: 100% !important; }
 /* Contenido del drawer: menú vertical compacto */
 .side-drawer .drawer-header {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(6,30,12,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   display:flex;
   align-items:center;
   justify-content:space-between;
-  color: #064e3b; /* texto oscuro para contraste con fondo limón */
+  color: rgba(255,255,255,0.96); /* texto claro para legibilidad sobre la foto */
+  text-shadow: 0 2px 10px rgba(0,0,0,0.55);
 }
 .side-drawer .drawer-body {
   padding: 0.5rem 0.75rem;
@@ -379,13 +576,19 @@ canvas { max-width: 100% !important; height: 100% !important; }
 .side-drawer a, .side-drawer button {
   display: block;
   padding: 0.6rem 0.75rem;
-  color: #064e3b; /* texto oscuro para buen contraste sobre limón */
+  color: rgba(255,255,255,0.96); /* texto claro sobre overlay */
   text-decoration: none;
   font-size: 0.95rem;
   border-radius: 6px;
+  transition: background .12s ease, transform .12s ease;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.45);
+  /* Forzar fondo transparente por defecto dentro del drawer para evitar parches blancos */
+  background: transparent !important;
 }
 .side-drawer a:hover, .side-drawer button:hover {
-  background: rgba(6,30,12,0.06); /* sutil sombreado oscuro en hover */
+  /* Evitar parches blancos visibles: usar un brillo muy sutil o ligero fondo oscuro */
+  background: rgba(255,255,255,0.02);
+  transform: translateX(2px);
 }
 
 /* Botón hamburguesa compacto (si no existe) */
@@ -419,19 +622,62 @@ canvas { max-width: 100% !important; height: 100% !important; }
   align-items: center;
   justify-content: center;
   border-radius: 99px;
-  background: #ffffff;
-  color: #064e3b; /* emoji dark green look */
+  /* usar fondo oscuro sólido para evitar zonas claras */
+  background: rgba(0,0,0,0.9) !important;
+  color: #ffffff !important; /* icono blanco sobre círculo oscuro */
   margin-right: 0.8rem;
   font-size: 1rem;
-  box-shadow: 0 4px 10px rgba(6,30,12,0.08);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7) !important;
 }
 .side-drawer ul li {
-  color: #064e3b; /* texto oscuro para buen contraste sobre limón */
+  color: rgba(255,255,255,0.95); /* texto claro */
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 0.5rem;
   border-radius: 6px;
+}
+
+/* Estado seleccionado / activo: asegurar legibilidad (cuando un módulo está seleccionado) */
+.side-drawer a.selected,
+.side-drawer a[aria-current="page"],
+.side-drawer a.active,
+.side-drawer a:focus {
+  /* verde limón visible para destacar el item seleccionado */
+  background: linear-gradient(90deg, rgba(220,252,231,0.95), rgba(250,249,231,0.95)) !important; /* lime-ish */
+  border-left: 4px solid rgba(34,197,94,0.98) !important; /* verde intenso */
+  color: #0b3a03 !important; /* texto oscuro sobre fondo limón */
+  font-weight: 700 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 10px 30px rgba(0,0,0,0.5) !important;
+  transform: translateX(0);
+  transition: background .18s ease, border-left .18s ease, box-shadow .18s ease, transform .12s ease;
+}
+
+/* Asegurar que el icono dentro del item seleccionado siga siendo oscuro y el texto blanco */
+.side-drawer a.selected .menu-emoji,
+.side-drawer a[aria-current="page"] .menu-emoji,
+.side-drawer a.active .menu-emoji {
+  /* emoji con fondo blanco y el icono en verde oscuro para contraste */
+  background: #ffffff !important;
+  color: #0b3a03 !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45) !important;
+}
+
+/* Evitar que haya elementos con fondo blanco dentro del drawer que oculten el texto */
+.side-drawer *[class*="bg-white"],
+.side-drawer .bg-white,
+.side-drawer .back-link {
+  background: transparent !important;
+  color: rgba(255,255,255,0.96) !important;
+  border: none !important;
+}
+
+/* Enlaces o botones dentro del drawer que tengan clases de fondo deben forzarse transparentes */
+.side-drawer [class*="bg-"],
+.side-drawer [class*="card"],
+.side-drawer button,
+.side-drawer a {
+  background: transparent !important;
 }
 
 /* Pequeño ajuste visual para el botón hamburguesa en header */
@@ -970,8 +1216,9 @@ header button {
   background-image: url('/images/lugares/iglesia.jpg');
   background-size: cover;
   background-position: center right;
-  opacity: 0.78;
-  filter: none;
+  /* Hero background at watermark intensity */
+  opacity: 0.22; /* antes 0.78 */
+  filter: saturate(0.88) contrast(0.96) blur(0.4px);
   z-index: 0;
 }
 
@@ -981,7 +1228,8 @@ header button {
   content: "";
   position: absolute;
   inset: 0;
-  background: none;
+  /* Overlay más sutil para dejar la imagen como marca de agua */
+  background: linear-gradient(180deg, rgba(0,0,0,0.14), rgba(0,0,0,0.08));
   z-index: 1;
 }
 .principal-hero-inner { position: relative; z-index: 2; padding: 1rem 1rem; }
@@ -1022,6 +1270,45 @@ header button {
   .principal-hero-inner p { font-size: 0.78rem; }
 }
 
+/* Compact row layout for lugar cards on small screens */
+.card-lugar-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.6rem;
+}
+.card-lugar-thumb {
+  width: 96px;
+  height: 80px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.card-lugar-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Delete pill */
+.btn-delete-pill {
+  background: #ef4444; /* rojo */
+  color: #fff;
+  border: none;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.78rem;
+  border-radius: 999px;
+}
+.btn-delete-pill:hover { background: #dc2626; }
+
+@media (min-width: 641px) {
+  /* En desktop mantenemos el estilo original de tarjeta (imagen arriba) */
+  .card-lugar-row { display: block; }
+  .card-lugar-thumb { width: 100%; height: 160px; border-radius: 8px; }
+  .card-lugar-body { padding: 0.75rem; }
+}
+
 /* Botón de logout con estilo rojo, se puede usar en header para forzar color */
 .btn-logout {
   background: #dc2626 !important; /* rojo fuerte */
@@ -1031,3 +1318,236 @@ header button {
   border-radius: 8px !important;
 }
 .btn-logout:hover { background: #b91c1c !important; }
+
+/* Header actions compact style */
+.header-action {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.95rem;
+  border-radius: 8px;
+}
+
+.nuevo-form-bg {
+  /* Imagen de fondo fuera del formulario */
+  background-image: url('/images/lugares/años.jpg');
+  background-size: cover;
+  background-position: center center;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start; /* card estará en la parte superior */
+  padding: 2.5rem 0; /* espacio vertical para centrar el card visualmente */
+  position: relative;
+}
+
+/* Layout: imagen y formulario lado a lado en desktop, apilado en móvil */
+.nuevo-form-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: calc(100% - 2rem);
+  position: relative;
+  z-index: 2;
+}
+
+.nuevo-form-image {
+  background-image: url('/images/lugares/años.jpg');
+  background-size: cover;
+  background-position: center center;
+  border-radius: 12px;
+  min-height: 480px;
+  box-shadow: 0 12px 30px rgba(6,30,12,0.06);
+  overflow: hidden;
+}
+
+.nuevo-form-container { display: flex; flex-direction: column; justify-content: flex-start; }
+
+@media (max-width: 880px) {
+  .nuevo-form-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .nuevo-form-image { min-height: 220px; border-radius: 10px; }
+  .nuevo-form-container { padding: 0 1rem; }
+}
+
+/* Overlay aplicado al wrapper de fondo para bajar brillo de la imagen */
+.nuevo-form-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.26), rgba(0,0,0,0.14));
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Styles for 'Registrar nuevo lugar' form card (ahora sobre el fondo) */
+.form-card {
+  /* Semi-transparente con blur de fondo para mantener la imagen fuera pero legible */
+  background: rgba(248,249,250,0.78); /* ligero tinte gris sobre blanco */
+  backdrop-filter: blur(6px) saturate(110%);
+  -webkit-backdrop-filter: blur(6px) saturate(110%);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 12px 30px rgba(6,30,12,0.06);
+  position: relative;
+  overflow: visible;
+  z-index: 2; /* por encima del fondo y overlay */
+  border: 1px solid rgba(11,58,3,0.06);
+}
+
+/* Clase reutilizable para módulos con fondo gris translúcido estilo marca de agua */
+.module-gray {
+  background: rgba(24,24,24,0.06); /* gris suave translúcido */
+  border: 1px solid rgba(0,0,0,0.06);
+  backdrop-filter: blur(4px) saturate(1.02);
+  -webkit-backdrop-filter: blur(4px) saturate(1.02);
+  border-radius: 10px;
+  padding: 0.75rem;
+  box-shadow: 0 6px 18px rgba(6,30,12,0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  .module-gray {
+    background: rgba(255,255,255,0.04); /* invertir tono para modo oscuro */
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+}
+.back-button {
+  /* Por defecto conserva estilo cuando está dentro de la tarjeta (posición absoluta)
+     pero si se coloca fuera de la tarjeta lo deberíamos mostrar en flujo normal.
+     Usamos reglas específicas para ambos casos. */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(11,58,3,0.06);
+  border: none;
+  cursor: pointer;
+}
+.back-button:hover { background: rgba(11,58,3,0.09); }
+
+/* Si queremos forzar la versión absoluta (cuando la back-button esté dentro del card) */
+.form-card .back-button.absolute {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+/* Nota: el overlay ahora está en .nuevo-form-bg::before para que la imagen quede fuera del form */
+
+/* Asegurar que el contenido del formulario esté por encima del overlay */
+.form-card > * { position: relative; z-index: 1; }
+
+/* Back link estilo discreto dentro del header */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: hwb(0 100% 0% / 0.851);
+  border: 1px solid rgba(0,0,0,0.06);
+  color: #08332a;
+  cursor: pointer;
+}
+.back-link svg { color: #08332a; }
+.back-link:hover { background: rgba(255,255,255,0.02) !important; transform: translateY(-1px); }
+
+/* Botón fijo 'Regresar' en esquina */
+.back-fixed {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 1200;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255,255,255,0.95);
+  color: var(--brand-green-600);
+  border: 1px solid rgba(6,78,59,0.08);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.back-fixed:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.09); }
+
+@media (max-width: 640px) {
+  .back-fixed { top: 10px; left: 8px; padding: 0.4rem 0.6rem; font-size: 0.92rem; }
+}
+
+.form-grid { display: flex; flex-direction: column; gap: 0.9rem; }
+.form-row { display:flex; gap: 0.75rem; align-items:flex-end; }
+.form-field { display:flex; flex-direction:column; gap:0.35rem; }
+.form-label { font-size: 0.9rem; color: #064e3b; font-weight: 600; }
+.input-shadow { box-shadow: inset 0 -1px 0 rgba(0,0,0,0.03); }
+.image-preview-wrap { width: 96px; height: 64px; overflow:hidden; border-radius:8px; border:1px solid rgba(0,0,0,0.06); }
+.image-preview { width:100%; height:100%; object-fit:cover; display:block; }
+
+/* Inputs y labels para alto contraste sobre fondo semi-transparente */
+input, textarea, select {
+  background: rgba(255,255,255,0.9) !important;
+  color: #05281f !important;
+  border: 1px solid rgba(6,30,12,0.12) !important;
+}
+input::placeholder, textarea::placeholder { color: rgba(0,0,0,0.45) !important; }
+label, .form-label { color: #053728 !important; font-weight: 700; }
+
+.form-actions { display:flex; gap:0.6rem; justify-content:flex-end; margin-top:0.5rem; }
+.btn-primary { background: linear-gradient(180deg,#0ea5a3,#059669); color:#fff; padding:0.6rem 1.1rem; border-radius:8px; border:none; box-shadow: 0 8px 20px rgba(6,78,59,0.08); }
+.btn-primary:disabled { opacity:0.6; }
+.btn-secondary { background: transparent; border:1px solid rgba(6,30,12,0.06); padding:0.55rem 0.9rem; border-radius:8px; }
+
+@media (max-width: 640px) {
+  .form-row { flex-direction: column; align-items: stretch; }
+  .image-preview-wrap { width: 100%; height: 140px; }
+  .back-button { top:10px; left:10px; width:34px; height:34px; }
+  .form-card { padding: 0.9rem; }
+  .form-actions { flex-direction: column-reverse; gap: 0.5rem; }
+}
+
+@media (max-width: 640px) {
+  .header-action {
+    padding: 0.28rem 0.45rem !important;
+    font-size: 0.82rem !important;
+  }
+}
+
+/* Final override: asegurar que el item seleccionado del drawer sea siempre visible
+   (uso de selectores amplios y !important para vencer reglas anteriores) */
+nav.side-drawer a.selected,
+nav.side-drawer a[aria-current="page"],
+nav.side-drawer a.active,
+nav.side-drawer a:focus,
+nav.side-drawer button.selected,
+nav.side-drawer li.selected,
+nav.side-drawer li[aria-current="page"] {
+  background: linear-gradient(90deg, rgba(220,252,231,0.95), rgba(250,249,231,0.95)) !important;
+  border-left: 4px solid rgba(34,197,94,0.98) !important;
+  color: #0b3a03 !important;
+  font-weight: 700 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.45) !important;
+}
+
+nav.side-drawer a.selected .menu-emoji,
+nav.side-drawer a[aria-current="page"] .menu-emoji,
+nav.side-drawer a.active .menu-emoji,
+nav.side-drawer li.selected .menu-emoji {
+  background: #ffffff !important;
+  color: #0b3a03 !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45) !important;
+}
+
+/* También permitir selección por atributo data-active si se usa en JS */
+nav.side-drawer [data-active="true"],
+nav.side-drawer [data-selected="true"] {
+  background: linear-gradient(90deg, rgba(220,252,231,0.95), rgba(250,249,231,0.95)) !important;
+  color: #0b3a03 !important;
+}

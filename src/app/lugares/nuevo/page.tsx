@@ -97,68 +97,123 @@ export default function NuevoLugar() {
   }
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Registrar nuevo lugar turístico</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          name="nombre"
-          placeholder="Nombre"
-          value={form.nombre}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          required
-        />
-        <textarea
-          name="descripcion"
-          placeholder="Descripción / Historia"
-          value={form.descripcion}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          rows={3}
-          required
-        />
-        <input
-          name="imagen_url"
-          placeholder="URL de imagen"
-          value={form.imagen_url}
-          onChange={handleChange}
-          className="border p-2 rounded"
-        />
-        <input
-          name="latitud"
-          placeholder="Latitud"
-          value={form.latitud}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          type="number"
-          step="any"
-        />
-        <input
-          name="longitud"
-          placeholder="Longitud"
-          value={form.longitud}
-          onChange={handleChange}
-          className="border p-2 rounded"
-          type="number"
-          step="any"
-        />
-        <label className="block">
-          Tipo de lugar:
-          <select
-            name="tipo"
-            value={form.tipo}
-            onChange={handleChange}
-            className="border p-2 rounded w-full mt-1"
-          >
-            <option value="TURISTICO">Lugar turístico</option>
-            <option value="CULTURAL">Lugar cultural</option>
-          </select>
-        </label>
-        {errorMsg && <div className="text-red-600 text-sm">{errorMsg}</div>}
-        <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded">
-          {saving ? "Guardando..." : "Registrar lugar"}
-        </button>
-      </form>
+    <div className="nuevo-form-bg">
+      {/* Layout: imagen a la izquierda, formulario a la derecha (apila en móvil) */}
+      <div className="nuevo-form-layout">
+        <div className="nuevo-form-image" aria-hidden="true">
+          {/* imagen decorativa: se carga desde CSS background */}
+        </div>
+
+        <div className="nuevo-form-container p-6">
+          {/* Back button fijo en esquina superior izquierda con texto */}
+          <button type="button" onClick={() => router.back()} aria-label="Regresar" className="back-fixed">
+            ← Regresar
+          </button>
+
+          <div className="form-card relative">
+
+            <header className="mb-4" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <h1 className="text-2xl font-extrabold">Registrar nuevo lugar turístico / Cultura</h1>
+
+            </header>
+
+            <form onSubmit={handleSubmit} className="form-grid">
+          <div className="form-field">
+            <label className="form-label">Nombre</label>
+            <input
+              name="nombre"
+              placeholder="Nombre"
+              value={form.nombre}
+              onChange={handleChange}
+              className="border p-2 rounded input-shadow w-full"
+              required
+            />
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Descripción / Historia</label>
+            <textarea
+              name="descripcion"
+              placeholder="Descripción / Historia"
+              value={form.descripcion}
+              onChange={handleChange}
+              className="border p-2 rounded input-shadow w-full"
+              rows={4}
+              required
+            />
+          </div>
+
+          <div className="form-row">
+            <div style={{ flex: 1 }}>
+              <label className="form-label">URL de imagen</label>
+              <input
+                name="imagen_url"
+                placeholder="URL de imagen"
+                value={form.imagen_url}
+                onChange={handleChange}
+                className="border p-2 rounded input-shadow w-full"
+              />
+            </div>
+            {form.imagen_url && (
+              <div className="image-preview-wrap">
+                <img src={form.imagen_url} alt="preview" className="image-preview" onError={(e)=>{(e.target as HTMLImageElement).style.display='none'}} />
+              </div>
+            )}
+          </div>
+
+          <div className="form-row">
+            <div style={{ flex: 1 }}>
+              <label className="form-label">Latitud</label>
+              <input
+                name="latitud"
+                placeholder="Latitud"
+                value={form.latitud}
+                onChange={handleChange}
+                className="border p-2 rounded input-shadow w-full"
+                type="number"
+                step="any"
+              />
+            </div>
+            <div style={{ width: 16 }} />
+            <div style={{ flex: 1 }}>
+              <label className="form-label">Longitud</label>
+              <input
+                name="longitud"
+                placeholder="Longitud"
+                value={form.longitud}
+                onChange={handleChange}
+                className="border p-2 rounded input-shadow w-full"
+                type="number"
+                step="any"
+              />
+            </div>
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Tipo de lugar</label>
+            <select
+              name="tipo"
+              value={form.tipo}
+              onChange={handleChange}
+              className="border p-2 rounded input-shadow w-full"
+            >
+              <option value="TURISTICO">Lugar turístico</option>
+              <option value="CULTURAL">Lugar cultural</option>
+            </select>
+          </div>
+
+          {errorMsg && <div className="text-red-600 text-sm">{errorMsg}</div>}
+
+          <div className="form-actions">
+            <button type="button" className="btn-secondary" onClick={() => router.push('/lugares')}>Cancelar</button>
+            <button type="submit" disabled={saving} className="btn-primary">
+              {saving ? "Guardando..." : "Registrar lugar"}
+            </button>
+          </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

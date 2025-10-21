@@ -59,7 +59,8 @@ export default function EmprendedoresPage() {
 
   return (
     <div className="emprendedores-page py-8">
-      <div className="container">
+      <div className="emprendedores-bg">
+        <div className="container">
         <button
           onClick={() => router.push("/principal")}
           className="text-sm inline-block mb-4 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
@@ -91,13 +92,13 @@ export default function EmprendedoresPage() {
           <p className="text-gray-600">No hay emprendedores registrados.</p>
         ) : (
           <div className="space-y-4">
-            {emprendedores.map((e) => {
+                {emprendedores.map((e) => {
               const canEdit =
                 usuarioLogueado!.rol === "ADMIN" ||
                 (usuarioLogueado!.rol === "EMPRENDEDOR" && usuarioLogueado!.id === e.usuario?.id);
 
-              return (
-                <div key={e.id} className="bg-white rounded-lg shadow p-4 flex items-start gap-4">
+                return (
+                <div key={e.id} className="negocio-card glass">
                   {/* Evitar pasar "" a src: usar foto solo si tiene contenido */}
                   <img
                     src={(typeof e.foto === "string" && e.foto.trim()) ? e.foto : "/images/lugares/AB.jpeg"}
@@ -139,6 +140,7 @@ export default function EmprendedoresPage() {
             })}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

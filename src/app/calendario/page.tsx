@@ -202,9 +202,10 @@ export default function CalendarioPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 text-sm">
+      <div className="calendar-wrapper">
+        <div className="grid calendar-grid grid-cols-7 gap-2 text-sm">
         {["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"].map(d => (
-          <div key={d} className="text-center font-medium text-gray-600">{d}</div>
+          <div key={d} className="calendar-weekday text-center font-medium text-gray-600">{d}</div>
         ))}
         {weeks.map((w, wi) => (
           w.map((day, di) => {
@@ -214,7 +215,7 @@ export default function CalendarioPage() {
             return (
               <div
                 key={`${wi}-${di}`}
-                className={`min-h-[96px] border rounded p-2 bg-white shadow-sm hover:shadow-md transition relative ${isToday ? "ring-2 ring-green-300" : ""}`}
+                className={`calendar-cell min-h-[96px] border rounded p-2 bg-white shadow-sm hover:shadow-md transition relative ${isToday ? "ring-2 ring-green-300" : ""}`}
               >
                 {day ? (
                   <div className="flex items-center justify-between mb-1">
@@ -248,6 +249,7 @@ export default function CalendarioPage() {
             );
           })
         ))}
+        </div>
       </div>
 
       {/* Modal / form */}
