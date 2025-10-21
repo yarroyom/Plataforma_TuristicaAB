@@ -3,16 +3,17 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
  /** Comprueba rápidamente si la BD responde (timeout en ms) */
+ //prueba vercel, caida
 async function checkDbAvailable(timeoutMs = 1500): Promise<boolean> {
   try {
-    // Ejecuta una consulta muy ligera; si falla o tarda más del timeout consideramos la BD no disponible
-    const op = (prisma as any).$queryRaw`SELECT 1` as Promise<any>;
-    const to = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), timeoutMs));
-    await Promise.race([op, to]);
-    return true;
+	// Ejecuta una consulta muy ligera; si falla o tarda más del timeout consideramos la BD no disponible
+	const op = (prisma as any).$queryRaw`SELECT 1` as Promise<any>;
+	const to = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), timeoutMs));
+	await Promise.race([op, to]);
+	return true;
   } catch (e) {
-    console.warn("DB availability check failed:", e?.message ?? e);
-    return false;
+	console.warn("DB availability check failed:", (e as any)?.message ?? e);
+	return false;
   }
 }
 
