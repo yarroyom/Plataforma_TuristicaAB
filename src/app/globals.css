@@ -1551,3 +1551,83 @@ nav.side-drawer [data-selected="true"] {
   background: linear-gradient(90deg, rgba(220,252,231,0.95), rgba(250,249,231,0.95)) !important;
   color: #0b3a03 !important;
 }
+
+/* Mobile-specific drawer tweaks: asegurar texto blanco, espaciado táctil y legibilidad
+   - Forzamos color blanco para el texto del menú en móvil, reducimos sombras y tamaño del emoji
+   - Mejoramos padding para tap targets y hacemos la selección más contrastada en móvil */
+@media (max-width: 640px) {
+  /* Forzar texto blanco dentro del drawer en móvil (coherente con versión desktop) */
+  nav.side-drawer,
+  nav.side-drawer .drawer-header,
+  nav.side-drawer .drawer-body,
+  nav.side-drawer a,
+  nav.side-drawer button,
+  nav.side-drawer ul li {
+    color: #ffffff !important;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6) !important;
+  }
+
+  /* Aumentar tap target y spacing para móvil */
+  nav.side-drawer a,
+  nav.side-drawer button,
+  nav.side-drawer ul li {
+    padding: 0.9rem 0.9rem !important;
+    font-size: 1.02rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Emoji más pequeño y con sombra más sutil en móvil para evitar ocupar mucho espacio */
+  nav.side-drawer .menu-emoji {
+    width: 1.4rem !important;
+    height: 1.4rem !important;
+    font-size: 0.95rem !important;
+    margin-right: 0.6rem !important;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.55) !important;
+    background: rgba(0,0,0,0.72) !important; /* mantener contraste del icono */
+  }
+
+  /* Hover y active: en móvil usamos un fondo ligeramente translúcido para no tapar la imagen */
+  nav.side-drawer a:hover,
+  nav.side-drawer button:hover {
+    background: rgba(255,255,255,0.06) !important;
+    transform: none !important;
+  }
+
+  /* Estado seleccionado en móvil: usamos borde izquierdo y un fondo más oscuro (no demasiado claro)
+     para mantener el contraste frente a la foto pero sin convertir todo en limón brillante */
+  nav.side-drawer a.selected,
+  nav.side-drawer a[aria-current="page"],
+  nav.side-drawer a.active,
+  nav.side-drawer li.selected,
+  nav.side-drawer [data-active="true"],
+  nav.side-drawer [data-selected="true"] {
+    background: linear-gradient(90deg, rgba(34,197,94,0.14), rgba(255,255,255,0.02)) !important;
+    border-left: 4px solid rgba(34,197,94,0.98) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
+  }
+
+  /* Emoji dentro del item seleccionado: fondo blanco y color oscuro para el círculo del icono
+     pero con menor sombra en móvil */
+  nav.side-drawer a.selected .menu-emoji,
+  nav.side-drawer a[aria-current="page"] .menu-emoji,
+  nav.side-drawer a.active .menu-emoji,
+  nav.side-drawer li.selected .menu-emoji,
+  nav.side-drawer [data-active="true"] .menu-emoji {
+    background: #ffffff !important;
+    color: #0b3a03 !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.45) !important;
+  }
+
+  /* Evitar que haya elementos con fondo blanco dentro del drawer que oculten el texto en móvil */
+  nav.side-drawer *[class*="bg-white"],
+  nav.side-drawer .bg-white,
+  nav.side-drawer .back-link {
+    background: transparent !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+}
