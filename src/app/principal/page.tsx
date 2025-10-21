@@ -245,7 +245,7 @@ export default function Principal() {
             </button>
             <button
               onClick={handleLogout}
-              className="bg-red-600 text-white px-3 py-1 rounded"
+              className="btn-logout"
             >
               Cerrar sesión
             </button>

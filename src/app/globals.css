@@ -897,8 +897,9 @@ header button {
   }
 
   /* Fondos de tarjetas y la mayoría de componentes totalmente opacos para contraste.
-     Excluimos elementos que deben mantener su fondo (ej. menus laterales y páginas temáticas). */
-  .card, .bg-white, nav, .principal-page, .lugares-page {
+    Excluimos elementos que deben mantener su fondo (ej. menus laterales y páginas temáticas). */
+  /* Nota: excluimos específicamente el drawer lateral (nav.side-drawer) para que conserve su fondo verde */
+  .card, .bg-white, nav:not(.side-drawer), .principal-page, .lugares-page {
     background-color: #ffffff !important;
     background: #ffffff !important;
     opacity: 1 !important;
@@ -957,10 +958,11 @@ header button {
 
 /* Principal: hero visual y ajustes de cards para aspecto profesional */
 .principal-hero {
-  /* Usamos la imagen del logo como fondo y una capa overlay para contraste */
+  /* Hero compacto: usamos un max-height para que la portada ocupe menos espacio */
   position: relative;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
+  max-height: 360px; /* límite en desktop */
 }
 .principal-hero-bg {
   position: absolute;
@@ -968,8 +970,8 @@ header button {
   background-image: url('/images/lugares/iglesia.jpg');
   background-size: cover;
   background-position: center right;
-  opacity: 0.65; /* aumentamos para que la imagen se vea claramente */
-  filter: none; /* quitar blur para más nitidez */
+  opacity: 0.78;
+  filter: none;
   z-index: 0;
 }
 
@@ -982,7 +984,7 @@ header button {
   background: none;
   z-index: 1;
 }
-.principal-hero-inner { position: relative; z-index: 2; }
+.principal-hero-inner { position: relative; z-index: 2; padding: 1rem 1rem; }
 
 /* Sombra ligera en el texto del hero para mantener legibilidad sobre la foto */
 .principal-hero-inner h2,
@@ -1011,6 +1013,21 @@ header button {
 
 @media (max-width: 640px) {
   .card-lugar { border-radius: 10px; }
-  .card-lugar-img { height: 140px; }
-  .principal-hero-inner { padding: 1rem; }
+  /* Tarjetas más grandes en móvil para mejor legibilidad */
+  .card-lugar-img { height: 180px; }
+  .principal-hero { max-height: 220px; }
+  .principal-hero-bg { background-position: center; opacity: 0.92; }
+  .principal-hero-inner { padding: 0.7rem; }
+  .principal-hero-inner h2 { font-size: 0.95rem; line-height: 1.05; }
+  .principal-hero-inner p { font-size: 0.78rem; }
 }
+
+/* Botón de logout con estilo rojo, se puede usar en header para forzar color */
+.btn-logout {
+  background: #dc2626 !important; /* rojo fuerte */
+  color: #fff !important;
+  border: none !important;
+  padding: 0.45rem 0.8rem !important;
+  border-radius: 8px !important;
+}
+.btn-logout:hover { background: #b91c1c !important; }
