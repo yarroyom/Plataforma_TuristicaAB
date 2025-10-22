@@ -70,8 +70,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-2xl">
         {/* Imagen arriba del formulario */}
         <img
-          src="/images/lugares/AB.jpeg"
-          alt="Logo Agua Blanca"
+          src="/images/lugares/images.jpeg"
+          alt="Logo"
           className="mx-auto w-24 h-24 object-cover rounded-md mb-3"
         />
         <h2 className="text-2xl font-bold text-center text-gray-800">
