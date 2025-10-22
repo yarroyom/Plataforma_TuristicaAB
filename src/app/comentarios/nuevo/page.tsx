@@ -61,13 +61,13 @@ export default function NuevoComentarioPage() {
       <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
         <button
           onClick={() => router.push('/principal')}
-          className="bg-green-600 text-white px-3 py-2 rounded shadow"
+          className="bg-green-600 text-white px-2 py-1 rounded shadow text-sm sm:text-base"
         >
           Volver
         </button>
       </div>
       <div className="page-container max-w-3xl mx-auto">
-        <div className="p-6 sm:p-8 w-full sm:max-w-lg mx-auto bg-white rounded-lg shadow-lg">
+  <div className="pt-12 p-6 sm:pt-8 sm:p-8 w-full sm:max-w-lg mx-auto bg-white rounded-lg shadow-lg">
           <h1 className="text-2xl font-bold mb-4 text-gray-800">Dejar Comentario</h1>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label className="font-semibold">Lugar:</label>
