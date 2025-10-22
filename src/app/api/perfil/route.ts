@@ -135,22 +135,32 @@ export async function PUT(req: NextRequest) {
 /* { /changed code } */
 
 export async function DELETE(req: NextRequest) {
-  let token = req.cookies.get("token")?.value;
-  if (!token) {
-    const authHeader = req.headers.get("authorization");
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      token = authHeader.replace("Bearer ", "");
-    }
-  }
-  if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   try {
-    const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
-    await prisma.usuario.delete({
-      where: { id: payload.id },
-    });
-    return NextResponse.json({ message: "Usuario eliminado" });
+    const userId = await getUserIdFromReq(req);
+    if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+    // verificar existencia
+    const usuarioExistente = await prisma.usuario.findUnique({ where: { id: userId } });
+    if (!usuarioExistente) {
+      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    }
+
+    // eliminar dependencias en orden: tablas que referencean usuario
+    await prisma.$transaction([
+      prisma.favorito.deleteMany({ where: { usuarioId: userId } }),
+      prisma.reseña.deleteMany({ where: { usuarioId: userId } }),
+      prisma.emprendedorPerfil.deleteMany({ where: { usuarioId: userId } }),
+      prisma.redSocial.deleteMany({ where: { usuarioId: userId } }),
+      prisma.rating.deleteMany({ where: { usuarioId: userId } }),
+      // eventosCreados: si los eventos tienen creadoPor referenciando al usuario
+      prisma.evento.updateMany({ where: { creadoPor: userId }, data: { creadoPor: null } }),
+    ]);
+
+    // finalmente eliminar el usuario
+    await prisma.usuario.delete({ where: { id: userId } });
+    return NextResponse.json({ ok: true, message: "Usuario eliminado" });
   } catch (err) {
+    console.error("DELETE /api/perfil error:", err);
     return NextResponse.json({ error: "Error al eliminar usuario" }, { status: 500 });
   }
 }

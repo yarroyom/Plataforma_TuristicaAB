@@ -97,88 +97,110 @@ export default function PerfilPage() {
 
   const handleEliminarUsuario = async () => {
     if (!confirm("¿Seguro que quieres eliminar tu usuario? Esta acción no se puede deshacer.")) return;
-    const res = await fetch("/api/perfil", {
-      method: "DELETE",
-      credentials: "include",
-    });
-    if (res.ok) {
-      alert("Usuario eliminado correctamente");
-      router.push("principal"); // <-- redirige a página principal en vez de /login
-    } else {
-      const data = await res.json();
-      alert(data.error || "Error al eliminar usuario");
+    try {
+      setLoading(true);
+      const res = await fetch("/api/perfil", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        // eliminar sesión/redirect: llevar al usuario a login
+        alert(data.message || "Usuario eliminado correctamente");
+        // redirigir a /login para que inicie sesión o confirme salida
+        router.push("/login");
+        return;
+      } else {
+        alert(data.error || "Error al eliminar usuario");
+      }
+    } catch (err) {
+      console.error("handleEliminarUsuario error:", err);
+      alert("Error al eliminar usuario");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="p-8 max-w-md mx-auto relative">
+    <div className="p-8 max-w-md mx-auto relative perfil-page">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Mi Cuenta</h1>
-        <div className="flex items-center gap-2">
+        {/* Botón: regresar a la página principal ubicado a la izquierda */}
+        <div>
           <button
-            className="bg-blue-600 text-white px-4 py-2 rounded shadow"
-            onClick={() => window.open("/redes-sociales", "_blank")}
-            style={{ zIndex: 50 }}
-          >
-            Redes sociales
-          </button>
-
-          {/* Botón: regresar a la página principal */}
-          <button
-            className="ml-2 bg-gray-200 text-gray-800 px-3 py-1 rounded"
+            className="bg-gray-200 text-gray-800 px-3 py-1 rounded"
             onClick={() => router.push("principal")}
             aria-label="Ir a inicio"
           >
             ← Inicio
           </button>
         </div>
+
+        {/* Título ubicado al extremo derecho */}
+        <h1 className="text-2xl font-bold">Mi Cuenta</h1>
       </div>
-      <div className="flex flex-col items-center mb-6">
-        {usuario.foto ? (
-          <>
-            <img src={usuario.foto} alt="Foto de perfil" className="w-32 h-32 object-cover rounded-full mb-2" />
-            <button
-              className="bg-red-600 text-white px-3 py-1 rounded mb-2"
-              onClick={handleEliminarFoto}
-              disabled={loading}
-            >
-              Eliminar foto
-            </button>
-          </>
-        ) : (
-          <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center mb-2 text-gray-500">
-            Sin foto
+
+      {/* Perfil: hero con foto centrada */}
+      <section className="profile-hero mb-6">
+        <div className="profile-hero-inner container">
+          <div className="profile-photo-wrap">
+            {usuario.foto ? (
+              <img src={usuario.foto} alt="Foto de perfil" className="profile-photo" />
+            ) : (
+              <div className="profile-photo" style={{ background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>Sin foto</div>
+            )}
           </div>
-        )}
-        <div className="font-bold">{usuario.nombre}</div>
-        <div className="text-gray-600">{usuario.correo}</div>
-      </div>
-      <form onSubmit={handleFotoSubmit} className="mb-6 flex flex-col gap-2">
-        <label className="font-semibold">Cambiar foto de perfil:</label>
-        <input type="file" accept="image/*" onChange={handleFileChange} />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={loading}>
-          {loading ? "Guardando..." : "Actualizar foto"}
-        </button>
-      </form>
-      <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-2">
-        <label className="font-semibold">Cambiar contraseña:</label>
-        <input
-          type="password"
-          placeholder="Nueva contraseña"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="border p-2 rounded"
-        />
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded" disabled={loading}>
-          {loading ? "Guardando..." : "Actualizar contraseña"}
-        </button>
-      </form>
-      <button
-        className="bg-red-600 text-white px-4 py-2 rounded mt-4"
-        onClick={handleEliminarUsuario}
-      >
-        Eliminar usuario
-      </button>
+        </div>
+      </section>
+
+      <section className="profile-details container">
+        <div className="profile-card">
+          <div className="flex flex-col items-center mb-4">
+            {/* Mantengo botones y textos tal cual, solo cambio clases visuales */}
+            {usuario.foto && (
+              <button
+                className="bg-red-600 text-white px-3 py-1 rounded mb-2"
+                onClick={handleEliminarFoto}
+                disabled={loading}
+              >
+                Eliminar foto
+              </button>
+            )}
+            <div className="font-bold">{usuario.nombre}</div>
+            <div className="text-gray-600">{usuario.correo}</div>
+          </div>
+
+          <form onSubmit={handleFotoSubmit} className="mb-6 flex flex-col gap-2">
+            <label className="font-semibold">Cambiar foto de perfil:</label>
+            <input type="file" accept="image/*" onChange={handleFileChange} />
+            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded" disabled={loading}>
+              {loading ? "Guardando..." : "Actualizar foto"}
+            </button>
+          </form>
+
+          <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-2">
+            <label className="font-semibold">Cambiar contraseña:</label>
+            <input
+              type="password"
+              placeholder="Nueva contraseña"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="border p-2 rounded"
+            />
+            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded" disabled={loading}>
+              {loading ? "Guardando..." : "Actualizar contraseña"}
+            </button>
+          </form>
+
+          <div className="mt-4 text-center">
+            <button
+              className="bg-red-600 text-white px-4 py-2 rounded"
+              onClick={handleEliminarUsuario}
+            >
+              Eliminar usuario
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
