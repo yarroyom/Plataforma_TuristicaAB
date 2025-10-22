@@ -57,10 +57,18 @@ export default function NuevoComentarioPage() {
   };
 
   return (
-    <div className="comentarios-page">
-      <div className="page-container max-w-3xl mx-auto px-4">
-        <div className="p-8 max-w-md mx-auto">
-          <h1 className="text-2xl font-bold mb-4">Dejar Comentario</h1>
+    <div className="comentarios-page relative min-h-screen bg-gray-50 py-6 px-3 sm:py-8 sm:px-6">
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+        <button
+          onClick={() => router.push('/principal')}
+          className="bg-green-600 text-white px-3 py-2 rounded shadow"
+        >
+          Volver
+        </button>
+      </div>
+      <div className="page-container max-w-3xl mx-auto">
+        <div className="p-6 sm:p-8 w-full sm:max-w-lg mx-auto bg-white rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold mb-4 text-gray-800">Dejar Comentario</h1>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label className="font-semibold">Lugar:</label>
             <select
@@ -68,7 +76,7 @@ export default function NuevoComentarioPage() {
               value={form.lugarId}
               onChange={handleChange}
               required
-              className="border p-2 rounded"
+              className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
             >
               <option value="">Selecciona un lugar</option>
               {lugares.map(l => (
@@ -81,7 +89,7 @@ export default function NuevoComentarioPage() {
               value={form.comentario}
               onChange={handleChange}
               required
-              className="border p-2 rounded"
+              className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
               rows={3}
             />
             <label className="font-semibold">Calificación:</label>
@@ -100,11 +108,11 @@ export default function NuevoComentarioPage() {
               name="fechaVisita"
               value={form.fechaVisita}
               onChange={handleChange}
-              className="border p-2 rounded"
+              className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg shadow-md hover:opacity-95 w-full"
               disabled={loading}
             >
               {loading ? "Enviando..." : "Enviar Comentario"}
