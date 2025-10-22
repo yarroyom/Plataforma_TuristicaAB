@@ -13,7 +13,7 @@ interface Lugar {
 
 export default function Principal() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [usuarioLogueado, setUsuarioLogueado] = useState({ rol: "" });
+  const [usuarioLogueado, setUsuarioLogueado] = useState<any>({ rol: "" });
   // Nuevo estado para saber cuándo se cargó el usuario (evita flicker)
   const [userLoaded, setUserLoaded] = useState(false);
   const [lugares, setLugares] = useState<Lugar[]>([]);
@@ -30,7 +30,8 @@ export default function Principal() {
     fetch("/api/me", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.rol) setUsuarioLogueado({ rol: data.rol });
+        // Guardar la información pública devuelta por /api/me (id, nombre, correo, rol, foto)
+        if (data && data.rol) setUsuarioLogueado(data);
         else setUsuarioLogueado({ rol: "" });
         setUserLoaded(true); // marcamos que ya cargó el usuario
       })
@@ -70,7 +71,20 @@ export default function Principal() {
   }, []);
 
   const handleLogout = async () => {
-    // Abrir modal de calificación antes de cerrar sesión
+    // Si el usuario es ADMIN, no mostrar el modal de calificación: hacer logout directo
+    const rolUpper = String(usuarioLogueado?.rol ?? "").toUpperCase();
+    // Ocultar modal si el rol contiene 'ADMIN' (cubre 'ADMIN', 'ADMINISTRADORA', 'ADMINISTRADOR', etc.)
+    if (userLoaded && rolUpper.includes("ADMIN")) {
+      try {
+        await fetch("/api/logout", { method: "POST", credentials: "include" });
+      } catch (e) {
+        console.error("Error en logout (ADMIN):", e);
+      }
+      router.push("/login");
+      return;
+    }
+
+    // Abrir modal de calificación antes de cerrar sesión para usuarios no-ADMIN
     setShowRatingModal(true);
   };
 
@@ -83,7 +97,10 @@ export default function Principal() {
     setRatingLoading(true);
     try {
       if (ratingValue != null) {
-        const mensaje = `Calificación de la plataforma: ${ratingValue} / 5`;
+        const nombreUsuario = usuarioLogueado?.nombre ? String(usuarioLogueado.nombre) : null;
+        const idUsuario = usuarioLogueado?.id ? String(usuarioLogueado.id) : null;
+        const usuarioInfo = nombreUsuario ? ` por ${nombreUsuario}${idUsuario ? ` (id: ${idUsuario})` : ""}` : "";
+        const mensaje = `Calificación de la plataforma: ${ratingValue} / 5${usuarioInfo}`;
         await fetch("/api/notificaciones", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

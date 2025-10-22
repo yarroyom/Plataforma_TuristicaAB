@@ -97,7 +97,7 @@ export default function EstadisticaPage() {
         <div className="flex gap-1">
           <button onClick={exportExcel} className="bg-green-600 text-white px-2 py-1 rounded text-xs sm:text-sm">Excel</button>
           <button onClick={exportPDF} className="bg-blue-600 text-white px-2 py-1 rounded text-xs sm:text-sm">PDF</button>
-          <button onClick={() => window.print()} className="bg-gray-800 text-white px-2 py-1 rounded text-xs sm:text-sm">Imprimir</button>
+          <button onClick={() => window.print()} className="bg-yellow-400 hover:bg-yellow-500 text-black px-2 py-1 rounded text-xs sm:text-sm">Imprimir</button>
         </div>
       </div>
       {/* Tarjetas */}
@@ -118,38 +118,43 @@ export default function EstadisticaPage() {
       </div>
       {/* Gráfica de barras */}
       <div className="bg-white p-6 rounded shadow mb-8">
-        {/* contenedor responsive: alturas reducidas para vista compacta */}
-        <div className="w-full h-44 md:h-64 lg:h-72">
-          <Bar
-            data={{
-              labels: indicadores.map(i => i.nombre),
-              datasets: [
-                {
-                  label: "Valor Actual",
-                  data: indicadores.map(i => i.valores[0]?.valorActual ?? 0),
-                  backgroundColor: "rgba(59,130,246,0.6)",
+        {/* contenedor responsive: permitir scroll horizontal si hay muchas etiquetas en pantallas pequeñas */}
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: Math.max(indicadores.length * 140, 480) }} className="h-44 md:h-64 lg:h-72">
+            <Bar
+              data={{
+                labels: indicadores.map(i => i.nombre),
+                datasets: [
+                  {
+                    label: "Valor Actual",
+                    data: indicadores.map(i => i.valores[0]?.valorActual ?? 0),
+                    backgroundColor: "rgba(59,130,246,0.6)",
+                  },
+                  {
+                    label: "Meta",
+                    data: indicadores.map(i => i.meta),
+                    backgroundColor: "rgba(34,197,94,0.4)",
+                  },
+                ],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { position: "top" as const },
+                  tooltip: { mode: "index" },
+                  title: { display: false },
                 },
-                {
-                  label: "Meta",
-                  data: indicadores.map(i => i.meta),
-                  backgroundColor: "rgba(34,197,94,0.4)",
+                scales: {
+                  x: {
+                    stacked: false,
+                    ticks: { maxRotation: 45, minRotation: 0, font: { size: 10 } },
+                  },
+                  y: { beginAtZero: true },
                 },
-              ],
-            }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { position: "top" as const },
-                tooltip: { mode: "index" },
-                title: { display: false },
-              },
-              scales: {
-                x: { stacked: false },
-                y: { beginAtZero: true },
-              },
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
       </div>
       {/* Tabla de indicadores */}
