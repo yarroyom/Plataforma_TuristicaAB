@@ -8,6 +8,10 @@ export default function LoginPage() {
   const [form, setForm] = useState({ correo: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMsg, setForgotMsg] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,9 +117,42 @@ export default function LoginPage() {
             >
               Regístrate
             </a>
+            <div className="mt-2">
+              <button onClick={() => setShowForgotModal(true)} className="text-sm text-gray-500 hover:underline">¿Se me olvidó la contraseña?</button>
+            </div>
           </div>
         </form>
       </div>
+      {/* Modal Forgot Password */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black opacity-40" onClick={() => setShowForgotModal(false)} />
+          <div className="bg-white p-6 rounded shadow-lg z-60 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-2">Recuperar contraseña</h3>
+            <p className="text-sm text-gray-600 mb-4">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+            {forgotMsg && <div className="mb-3 text-sm text-green-600">{forgotMsg}</div>}
+            <input type="email" placeholder="Correo" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="w-full px-3 py-2 border rounded mb-3" />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowForgotModal(false)} className="px-3 py-2 rounded bg-gray-200">Cancelar</button>
+              <button onClick={async () => {
+                if (!forgotEmail) { setForgotMsg('Ingresa un correo válido'); return; }
+                setForgotLoading(true); setForgotMsg('');
+                try {
+                  const res = await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ correo: forgotEmail }) });
+                  if (res.ok) {
+                    setForgotMsg('Si el correo existe, recibirás un email con instrucciones.');
+                  } else {
+                    const d = await res.json().catch(() => ({}));
+                    setForgotMsg(d?.error || 'Ocurrió un error al solicitar el restablecimiento');
+                  }
+                } catch (e) {
+                  setForgotMsg('Error de conexión');
+                } finally { setForgotLoading(false); }
+              }} className="px-3 py-2 rounded bg-green-600 text-white" disabled={forgotLoading}>{forgotLoading ? 'Enviando...' : 'Enviar correo'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
