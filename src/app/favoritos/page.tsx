@@ -124,7 +124,7 @@ export default function FavoritosPage() {
                 {l.nombre}
               </div>
               <button
-                className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded disabled:opacity-50"
+                className={`btn-delete absolute top-2 right-2 ${deletingIds.includes(l.id) ? 'opacity-60 cursor-not-allowed' : ''}`}
                 onClick={e => {
                   e.stopPropagation();
                   handleEliminar(l.id);

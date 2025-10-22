@@ -158,7 +158,7 @@ export default function PerfilPage() {
             {/* Mantengo botones y textos tal cual, solo cambio clases visuales */}
             {usuario.foto && (
               <button
-                className="bg-red-600 text-white px-3 py-1 rounded mb-2"
+                className="btn-delete mb-2"
                 onClick={handleEliminarFoto}
                 disabled={loading}
               >
@@ -193,7 +193,7 @@ export default function PerfilPage() {
 
           <div className="mt-4 text-center">
             <button
-              className="bg-red-600 text-white px-4 py-2 rounded"
+              className="btn-delete px-4 py-2"
               onClick={handleEliminarUsuario}
             >
               Eliminar usuario

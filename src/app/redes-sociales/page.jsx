@@ -156,8 +156,7 @@ export default function RedesSocialesPage() {
             {usuarioId && r.usuarioId === usuarioId && (
               <button
                 onClick={() => handleDelete(r)}
-                className="mt-3 px-3 py-1 rounded bg-red-600 text-white text-sm"
-                style={{ borderRadius: '8px' }}
+                className="btn-delete mt-3"
               >
                 Eliminar
               </button>

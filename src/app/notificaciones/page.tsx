@@ -67,7 +67,7 @@ export default function NotificacionesPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="noti-title">{n.tipo === "negocio" ? "Nuevo negocio" : "Evento"}</div>
                 <button
-                  className="noti-delete"
+                  className={`btn-delete ${deletingIds.includes(n.id) ? 'opacity-60 cursor-not-allowed' : ''}`}
                   aria-label={`Eliminar notificación ${n.id}`}
                   onClick={(e) => { e.stopPropagation(); confirmAndDelete(n.id); }}
                   disabled={deletingIds.includes(n.id)}

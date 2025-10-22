@@ -628,7 +628,7 @@ export default function LugarDetalle() {
                             Editar
                           </button>
                           <button
-                            className={`px-2 py-1 rounded ${eliminandoIds.includes(r.id) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-red-600 text-white'}`}
+                            className={`btn-delete ${eliminandoIds.includes(r.id) ? 'opacity-60 cursor-not-allowed' : ''}`}
                             onClick={() => handleEliminarResena(r.id)}
                             disabled={eliminandoIds.includes(r.id)}
                           >

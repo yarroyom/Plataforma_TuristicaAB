@@ -1477,6 +1477,91 @@ header button {
 }
 .btn-delete-pill:hover { background: #dc2626; }
 
+/* Compact delete button used across the app */
+.btn-delete {
+  background: transparent;
+  color: #ef4444; /* red text */
+  border: 1px solid rgba(239,68,68,0.95);
+  padding: 0 0.6rem;
+  font-size: 0.82rem;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  line-height: 1;
+  transition: background .12s ease, color .12s ease, border-color .12s ease, transform .08s ease;
+}
+.btn-delete:hover {
+  background: rgba(239,68,68,0.95);
+  color: #fff;
+  border-color: rgba(220,38,38,0.95);
+  transform: translateY(-1px);
+}
+.btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: transparent;
+  color: rgba(239,68,68,0.5);
+  border-color: rgba(239,68,68,0.35);
+}
+
+/* Ensure card content doesn't push the delete button: flexible layout and truncation */
+.card-content, .card-meta, .person-card-content, .red-card-content, .negocio-card .flex-1 {
+  min-width: 0; /* allow flex children to shrink */
+}
+.card-meta, .person-card-content .font-semibold, .person-card-content .text-xs, .red-card-content .text-blue-500 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Specific small adjustments for personas grid items */
+.personas-grid .card > img { width: 48px; height: 48px; }
+.personas-grid .card { display: flex; align-items: center; gap: 0.75rem; }
+.personas-grid .card .info { flex: 1 1 auto; min-width: 0; }
+.personas-grid .card .info .name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.personas-grid .card .info .email { font-size: 0.85rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Refined personas card look */
+.personas-grid .card {
+  padding: 0.9rem;
+  border-radius: 8px; /* un poco más sutil */
+  transition: box-shadow .12s ease, transform .12s ease;
+}
+.personas-grid .card:hover { box-shadow: 0 18px 36px rgba(6,30,12,0.06); transform: none; }
+.personas-grid .card .info .name { font-size: 1rem; color: #062e03; }
+.personas-grid .card .email { color: #6b7280; font-size: 0.85rem; }
+.personas-grid { align-items: stretch; }
+.personas-grid .card { height: 64px; }
+.personas-grid .card img { width: 56px; height: 56px; border-radius: 999px; }
+.personas-grid .card > div:last-child { flex: 0 0 auto; }
+
+/* Reserve space on the right for action buttons and vertically center them */
+.personas-grid .card { padding-right: 3rem; position: relative; }
+.personas-grid .card-actions {
+  position: absolute;
+  right: 0.6rem; /* ajuste final para quedar pegado al borde interno */
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.personas-grid .card .btn-delete { height: 28px; padding: 0 0.5rem; font-size: 0.82rem; border-radius: 8px; font-weight: 600; }
+
+/* Redes sociales cards compact */
+.red-card { display:flex; align-items:center; gap:0.6rem; }
+.red-card .link { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Favoritos card adjustment when button absolute: ensure title container has padding-right so button doesn't cover text */
+.favorito-card .block { padding-right: 3.2rem; }
+
+/* Emprendedores: ensure acciones row doesn't wrap and delete button stays aligned */
+.negocio-card .mt-3 { display: flex; gap: 0.5rem; align-items: center; }
+.negocio-card .mt-3 button { flex: 0 0 auto; }
+
 @media (min-width: 641px) {
   /* En desktop mantenemos el estilo original de tarjeta (imagen arriba) */
   .card-lugar-row { display: block; }

@@ -126,7 +126,7 @@ export default function EmprendedoresPage() {
                             Editar
                           </button>
                           <button
-                            className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                            className="btn-delete"
                             onClick={() => router.push(`/emprendedores/${e.id}/eliminar`)}
                           >
                             Eliminar

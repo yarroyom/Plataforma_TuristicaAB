@@ -81,7 +81,7 @@ export default function LugaresPage() {
             {/* Mostrar botón eliminar solo si es ADMIN */}
             {usuarioLogueado.rol === "ADMIN" && (
               <button
-                className="mt-3 inline-block bg-red-600 text-white px-3 py-1 rounded text-sm"
+                className="btn-delete mt-3"
                 onClick={() => handleEliminar(l.id)}
               >
                 Eliminar

@@ -201,7 +201,7 @@ export default function Principal() {
                       e.stopPropagation();
                       handleEliminar(l.id);
                     }}
-                    className="btn-delete-pill"
+                    className="btn-delete"
                     title="Eliminar lugar"
                   >
                     Eliminar
@@ -355,6 +355,12 @@ export default function Principal() {
                   className="hover:bg-gray-100 p-2 rounded cursor-pointer"
                 >
                   <span className="menu-emoji">👤</span> Cuenta
+                </li>
+                <li
+                  onClick={() => { router.push("/personas"); setMenuOpen(false); }}
+                  className="hover:bg-gray-100 p-2 rounded cursor-pointer"
+                >
+                  <span className="menu-emoji">🧑‍🤝‍🧑</span> Personas
                 </li>
                 <li
                   onClick={() => { handleLogout(); setMenuOpen(false); }}

@@ -58,7 +58,7 @@ export default function VerEmprendedor() {
             Editar
           </button>
           <button
-            className="bg-red-500 text-white px-4 py-2 rounded"
+            className="btn-delete px-4 py-2"
             onClick={() => router.push(`/emprendedores/${perfil.id}/eliminar`)}
           >
             Eliminar
