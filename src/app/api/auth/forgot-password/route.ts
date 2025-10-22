@@ -11,7 +11,8 @@ export async function POST(req: NextRequest) {
     const correo = String(body?.correo ?? "").toLowerCase();
     if (!correo) return NextResponse.json({ error: "correo requerido" }, { status: 400 });
 
-    const usuario = await prisma.usuario.findUnique({ where: { correo } }).catch(() => null);
+  // Buscar usuario por correo de forma case-insensitive (Postgres es case-sensitive por defecto)
+  const usuario = await prisma.usuario.findFirst({ where: { correo: { equals: correo, mode: 'insensitive' } } }).catch(() => null);
     if (!usuario) {
       // No revelar existencia de usuario: responder OK
       return NextResponse.json({ ok: true });
