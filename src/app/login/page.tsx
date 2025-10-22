@@ -23,6 +23,34 @@ export default function LoginPage() {
       });
 
       if (res.ok) {
+        // extraer id del usuario desde la respuesta y registrar acceso
+        try {
+          const data = await res.json();
+          const usuarioId = data?.id ?? null;
+          // intentar notificar el indicador en background; si falla, no bloqueamos el login
+          try {
+            await fetch("/api/indicadores/accesos", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ usuarioId, fuente: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown' }),
+            });
+            // registrar clic en la página de login (fire-and-forget)
+            try {
+              fetch("/api/indicadores/clics", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pagina: "login", usuarioId }),
+              }).catch(() => null);
+            } catch {}
+          } catch (e) {
+            // log en cliente para depuración; no interrumpe el flujo de login
+            console.warn("No se pudo registrar indicador de accesos:", e);
+          }
+        } catch (e) {
+          // Si no podemos parsear el body, continuar con redirección
+          console.warn("Login: no se pudo parsear respuesta para indicador", e);
+        }
+
         router.push("/principal"); // redirige si login exitoso
       } else {
         const data = await res.json();

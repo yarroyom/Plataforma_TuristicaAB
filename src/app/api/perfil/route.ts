@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { incrementIndicadorByName } from "@/lib/indicadores";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
@@ -115,6 +116,15 @@ export async function PUT(req: NextRequest) {
       where: { id: userId },
       data: updates,
     });
+
+    // Registrar actualización (no bloqueante)
+    (async () => {
+      try {
+        await incrementIndicadorByName("Número de actualizaciones realizadas");
+      } catch (e) {
+        console.warn("No se pudo registrar indicador de actualizaciones (perfil):", e);
+      }
+    })();
 
     // devolver datos públicos
     const publico = {

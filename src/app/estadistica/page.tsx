@@ -27,7 +27,7 @@ export default function EstadisticaPage() {
     if (categoria) params.push(`categoria=${categoria}`);
     if (fechaInicio && fechaFin) params.push(`fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
     if (params.length) url += "?" + params.join("&");
-    fetch(url)
+    fetch(url, { cache: "no-store" })
       .then(async res => {
         if (!res.ok) {
           setIndicadores([]);
@@ -73,26 +73,32 @@ export default function EstadisticaPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <style>{`@media print { .no-print { display: none !important; } }`}</style>
       <button
         onClick={() => router.back()}
-        className="text-blue-600 underline mb-4 flex items-center gap-2"
-        aria-label="Regresar"
+        className="mb-4 inline-flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-full shadow-sm no-print"
+        aria-label="Volver"
+        title="Volver"
       >
-        ← Regresar
+        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-sm">◀</span>
+        <span className="font-medium">Volver</span>
       </button>
       <h1 className="text-xl font-semibold mb-4">Estadística de Indicadores</h1>
       {/* Filtros */}
-      <div className="flex gap-2 mb-4 items-center">
-        <select value={categoria} onChange={e => setCategoria(e.target.value)} className="border p-1.5 rounded text-sm">
+      <div className="flex flex-wrap gap-2 mb-4 items-center no-print">
+        <select value={categoria} onChange={e => setCategoria(e.target.value)} className="border p-1 sm:p-1.5 rounded text-xs sm:text-sm">
           <option value="">Todas las categorías</option>
           <option value="Dependiente">Dependiente</option>
           <option value="Independiente 1">Independiente 1</option>
           <option value="Independiente 2">Independiente 2</option>
         </select>
-        <input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} className="border p-1.5 rounded text-sm" />
-        <input type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} className="border p-1.5 rounded text-sm" />
-        <button onClick={exportExcel} className="bg-green-600 text-white px-2 py-1 rounded text-sm">Excel</button>
-        <button onClick={exportPDF} className="bg-blue-600 text-white px-2 py-1 rounded text-sm">PDF</button>
+        <input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} className="border p-1 sm:p-1.5 rounded text-xs sm:text-sm" />
+        <input type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} className="border p-1 sm:p-1.5 rounded text-xs sm:text-sm" />
+        <div className="flex gap-1">
+          <button onClick={exportExcel} className="bg-green-600 text-white px-2 py-1 rounded text-xs sm:text-sm">Excel</button>
+          <button onClick={exportPDF} className="bg-blue-600 text-white px-2 py-1 rounded text-xs sm:text-sm">PDF</button>
+          <button onClick={() => window.print()} className="bg-gray-800 text-white px-2 py-1 rounded text-xs sm:text-sm">Imprimir</button>
+        </div>
       </div>
       {/* Tarjetas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">

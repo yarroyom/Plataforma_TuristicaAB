@@ -70,8 +70,50 @@ export default function Principal() {
   }, []);
 
   const handleLogout = async () => {
-    // Elimina la cookie del token (puedes hacerlo con una petición al backend)
-    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    // Abrir modal de calificación antes de cerrar sesión
+    setShowRatingModal(true);
+  };
+
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingValue, setRatingValue] = useState<number | null>(null);
+  const [ratingLoading, setRatingLoading] = useState(false);
+
+  const submitRatingAndLogout = async () => {
+    // Enviar la calificación (si el usuario seleccionó una)
+    setRatingLoading(true);
+    try {
+      if (ratingValue != null) {
+        const mensaje = `Calificación de la plataforma: ${ratingValue} / 5`;
+        await fetch("/api/notificaciones", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ mensaje, tipo: "calificacion", fecha: new Date().toISOString() }),
+        });
+      }
+    } catch (e) {
+      console.error("Error enviando calificación:", e);
+    } finally {
+      // Proceder al logout siempre
+      try {
+        await fetch("/api/logout", { method: "POST", credentials: "include" });
+      } catch (e) {
+        console.error("Error en logout:", e);
+      }
+      setRatingLoading(false);
+      setShowRatingModal(false);
+      router.push("/login");
+    }
+  };
+
+  const skipRatingAndLogout = async () => {
+    // Cierra sesión sin calificar
+    try {
+      await fetch("/api/logout", { method: "POST", credentials: "include" });
+    } catch (e) {
+      console.error("Error en logout:", e);
+    }
+    setShowRatingModal(false);
     router.push("/login");
   };
 
@@ -309,6 +351,30 @@ export default function Principal() {
         </div>
 
         {/* header-actions removed: Cuenta and logout moved into the drawer */}
+
+        {/* Modal de calificación (aparece antes del logout) */}
+        {showRatingModal && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center">
+            <div className="fixed inset-0 bg-black opacity-40" onClick={() => setShowRatingModal(false)} />
+            <div className="bg-white rounded-lg shadow-lg p-6 z-70 w-full max-w-sm">
+              <h3 className="text-lg font-bold mb-2">¿Cómo calificarías la plataforma?</h3>
+              <p className="text-sm text-gray-600 mb-4">Del 1 al 5, tu opinión nos ayuda a mejorar.</p>
+              <div className="flex gap-2 justify-center mb-4">
+                {[1,2,3,4,5].map((v) => (
+                  <button key={v} onClick={() => setRatingValue(v)} className={`px-3 py-2 rounded ${ratingValue === v ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button onClick={skipRatingAndLogout} className="px-3 py-2 rounded bg-gray-200">Omitir</button>
+                <button onClick={submitRatingAndLogout} className="px-3 py-2 rounded bg-green-600 text-white" disabled={ratingLoading}>
+                  {ratingLoading ? 'Enviando...' : 'Enviar y cerrar sesión'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Contenido principal: pantalla de lugares */}
         <main className="p-4">

@@ -337,7 +337,25 @@ export async function POST(req: NextRequest) {
 
 		if (!created) return NextResponse.json({ error: "No se pudo crear favorito" }, { status: 500 });
 
-		return NextResponse.json({ ok: true, favorito: created }, { status: 201 });
+				// --- Actualizar indicador: "Cantidad de lugares agregados a favoritos"
+				try {
+					const indicadorNombre = "Cantidad de lugares agregados a favoritos";
+					const indicador = await prisma.indicador.findFirst({ where: { nombre: indicadorNombre } });
+					if (indicador) {
+						const hoy = new Date();
+						hoy.setHours(0, 0, 0, 0);
+						const ultimo = await prisma.valorIndicador.findFirst({
+							where: { indicadorId: indicador.id, fecha: { gte: hoy } },
+							orderBy: { fecha: "desc" },
+						});
+						const nuevoValor = ultimo ? (ultimo.valorActual ?? 0) + 1 : 1;
+						await prisma.valorIndicador.create({ data: { indicadorId: indicador.id, valorActual: nuevoValor, fecha: new Date() } });
+					}
+				} catch (e) {
+					console.warn("No se pudo actualizar indicador de favoritos:", e);
+				}
+
+				return NextResponse.json({ ok: true, favorito: created }, { status: 201 });
 	} catch (err: any) {
 		console.error("POST /api/favoritos unexpected error:", err);
 		return NextResponse.json({ error: err?.message ?? "Error interno" }, { status: 500 });

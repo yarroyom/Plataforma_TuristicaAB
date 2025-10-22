@@ -116,57 +116,65 @@ export default function NuevoEmprendedor() {
   if (!usuarioLogueado) return <div>Verificando usuario...</div>;
 
   return (
-    <div className="p-8">
-      <button
-        className="text-blue-600 underline mb-4"
-        onClick={() => router.push("/emprendedores")}
-      >
-        ← Regresar
-      </button>
-      <h1 className="text-2xl font-bold mb-4">Nuevo Emprendedor</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md">
-        <input
-          name="nombre"
-          className="border p-2 rounded"
-          placeholder="Nombre"
-          value={form.nombre}
-          onChange={handleChange}
-          required
-        />
-        <textarea
-          name="descripcion"
-          className="border p-2 rounded"
-          placeholder="Descripción"
-          value={form.descripcion}
-          onChange={handleChange}
-        />
-        <input
-          name="telefono"
-          className="border p-2 rounded"
-          placeholder="Teléfono"
-          value={form.telefono}
-          onChange={handleChange}
-        />
-        <input
-          name="direccion"
-          className="border p-2 rounded"
-          placeholder="Dirección"
-          value={form.direccion}
-          onChange={handleChange}
-        />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="border p-2 rounded"
-        />
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-          type="submit"
-        >
-          Crear Perfil
-        </button>
-      </form>
+    <div className="nuevo-form-bg nuevo-emprendedor-page">
+      <div className="nuevo-form-layout">
+        <div className="nuevo-form-container">
+          <button
+            className="back-fixed"
+            onClick={() => router.back()}
+            aria-label="Volver"
+          >
+            ← Volver
+          </button>
+
+          <div className="form-card nuevo-emprendedor-card">
+            <h1 className="text-2xl font-bold mb-2">Nuevo Emprendedor</h1>
+            <p className="text-gray-600 mb-4">Crea tu perfil público para que los turistas te encuentren.</p>
+
+            <form onSubmit={handleSubmit} className="form-grid">
+              <input
+                name="nombre"
+                placeholder="Nombre"
+                value={form.nombre}
+                onChange={handleChange}
+                required
+              />
+              <textarea
+                name="descripcion"
+                placeholder="Descripción"
+                value={form.descripcion}
+                onChange={handleChange}
+              />
+              <input
+                name="telefono"
+                placeholder="Teléfono"
+                value={form.telefono}
+                onChange={handleChange}
+              />
+              <input
+                name="direccion"
+                placeholder="Dirección"
+                value={form.direccion}
+                onChange={handleChange}
+              />
+
+              <div className="span-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              <div className="form-actions span-2">
+                <button className="btn-register" type="submit">
+                  Crear Perfil
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

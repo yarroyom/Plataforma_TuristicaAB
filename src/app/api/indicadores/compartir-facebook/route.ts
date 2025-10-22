@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
+import { incrementIndicadorByName } from "@/lib/indicadores";
 
 /* Helper: buscar lugar por id probando nombres comunes de modelo */
 async function findLugarById(id: number) {
@@ -49,6 +50,7 @@ async function getOrCreateIndicator(nombre: string, meta?: { categoria?: string;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
+    console.log("POST /api/indicadores/compartir-facebook called, body:", JSON.stringify(body));
     // body esperado: { usuarioId?, lugarId?, nombre?, descripcion?, imagen_url?, url? }
     const lugarIdRaw = body.lugarId ?? body?.lugar?.id ?? null;
     const lugarId = lugarIdRaw != null ? Number(lugarIdRaw) : null;
@@ -88,8 +90,21 @@ export async function POST(req: NextRequest) {
 
     // Indicador general: "Número de veces que se comparte un lugar/evento"
     const indicadorNombre = "Número de veces que se comparte un lugar/evento";
-    const indicador = await getOrCreateIndicator(indicadorNombre);
+    // Usar helper incrementador cuando sea posible
+    try {
+      const registro = await incrementIndicadorByName(indicadorNombre);
+      if (registro) {
+        return new Response(JSON.stringify({ ok: true, indicador: indicadorNombre, nuevoValor: registro.valorActual }), {
+          status: 201,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    } catch (e) {
+      console.warn("incrementIndicadorByName fallo en compartir-facebook:", e);
+    }
 
+    // Fallback: si el helper no funcionó (indicador no existe o error), crear manualmente
+    const indicador = await getOrCreateIndicator(indicadorNombre);
     const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
     const ultimo = await prisma.valorIndicador.findFirst({
       where: { indicadorId: indicador.id, fecha: { gte: hoy } },

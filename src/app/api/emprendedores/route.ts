@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
+import { incrementIndicadorByName } from "@/lib/indicadores";
 import nodemailer from "nodemailer";
 
 // Helper: resolver userId desde cookie o header Authorization (JWT o id numérico)
@@ -73,7 +74,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Crear notificación de nuevo negocio
+    // Crear una notificación de tipo 'negocio' — la API de notificaciones filtrará
+    // para que ADMIN no la vea en su lista, mientras que TURISTA y EMPRENDEDOR sí.
     await prisma.notificacion.create({
       data: {
         mensaje: `El emprendedor ${perfil.nombre} ha creado un nuevo negocio.`,
@@ -109,14 +111,30 @@ export async function POST(req: NextRequest) {
       console.error("Error al enviar correo:", error);
     }
 
-    // Registro de contenido agregado en el periodo
-    await prisma.valorIndicador.create({
-      data: {
-        indicadorId: 58, // <-- id de "Contenido agregado en el periodo"
-        valorActual: 1,
-        fecha: new Date(),
-      },
-    });
+    // Registro de contenido agregado en el periodo (incremental por día)
+    try {
+      const indicadorNombre = "Contenido agregado en el periodo";
+      const indicador = await prisma.indicador.findFirst({ where: { nombre: indicadorNombre } });
+      if (indicador) {
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+        const ultimo = await prisma.valorIndicador.findFirst({ where: { indicadorId: indicador.id, fecha: { gte: hoy } }, orderBy: { fecha: "desc" } });
+        const nuevoValor = ultimo ? (ultimo.valorActual ?? 0) + 1 : 1;
+        await prisma.valorIndicador.create({ data: { indicadorId: indicador.id, valorActual: nuevoValor, fecha: new Date() } });
+      } else {
+        await prisma.valorIndicador.create({ data: { indicadorId: 58, valorActual: 1, fecha: new Date() } });
+      }
+    } catch (e) {
+      console.warn("Error registrando contenido agregado en emprendedores:", e);
+    }
+
+    // Registrar base: usuarios que crearon negocio (no bloqueante)
+    (async () => {
+      try {
+        await incrementIndicadorByName("Usuarios que crearon negocio");
+      } catch (e) {
+        console.warn("No se pudo registrar indicador 'Usuarios que crearon negocio':", e);
+      }
+    })();
 
     return NextResponse.json({ perfil }); // <-- Faltaba este return
   } catch (err) {

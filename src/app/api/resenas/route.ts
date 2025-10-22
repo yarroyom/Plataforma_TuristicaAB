@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { incrementIndicadorByName } from "@/lib/indicadores";
 import jwt from "jsonwebtoken";
 
 /* Helper: resuelve userId desde cookie o header Authorization (JWT o id numérico) */
@@ -98,11 +99,18 @@ export async function POST(req: NextRequest) {
       include: { usuario: true },
     });
 
-    // indicador (no crítico)
+    // indicador (no crítico): registrar "Contenido agregado en el periodo" como incremento por día
     try {
-      await prisma.valorIndicador.create({
-        data: { indicadorId: 58, valorActual: 1, fecha: new Date() },
-      });
+      const indicadorNombre = "Contenido agregado en el periodo";
+      const indicador = await prisma.indicador.findFirst({ where: { nombre: indicadorNombre } });
+      if (indicador) {
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+        const ultimo = await prisma.valorIndicador.findFirst({ where: { indicadorId: indicador.id, fecha: { gte: hoy } }, orderBy: { fecha: "desc" } });
+        const nuevoValor = ultimo ? (ultimo.valorActual ?? 0) + 1 : 1;
+        await prisma.valorIndicador.create({ data: { indicadorId: indicador.id, valorActual: nuevoValor, fecha: new Date() } });
+      } else {
+        await prisma.valorIndicador.create({ data: { indicadorId: 58, valorActual: 1, fecha: new Date() } });
+      }
     } catch (e) {
       console.warn("Indicador reseña create falló:", e);
     }
@@ -231,9 +239,22 @@ export async function PUT(req: NextRequest) {
     const actualizado = await resenaModel.update({ where: { id: resenaId }, data: { comentario: nuevoComentario }, include: { usuario: true } });
 
     try {
-      await prisma.valorIndicador.create({ data: { indicadorId: 57, valorActual: 1, fecha: new Date() } });
+      // usado para contar "Número de actualizaciones realizadas"
+      (async () => {
+        try {
+          await incrementIndicadorByName("Número de actualizaciones realizadas");
+        } catch (e) {
+          console.warn("No se pudo registrar indicador de actualizaciones (resenas):", e);
+          // fallback: crear un registro unitario para mantener compatibilidad
+          try {
+            await prisma.valorIndicador.create({ data: { indicadorId: 57, valorActual: 1, fecha: new Date() } });
+          } catch (inner) {
+            console.warn("Fallback indicador 57 also failed:", inner);
+          }
+        }
+      })();
     } catch (e) {
-      console.warn("Indicador update reseña falló:", e);
+      console.warn("Indicador update reseña outer try falló:", e);
     }
 
     return NextResponse.json({

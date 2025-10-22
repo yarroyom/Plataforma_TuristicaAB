@@ -98,13 +98,7 @@ export default function NuevoLugar() {
 
   return (
     <div className="nuevo-form-bg">
-      {/* Layout: imagen a la izquierda, formulario a la derecha (apila en móvil) */}
-      <div className="nuevo-form-layout">
-        <div className="nuevo-form-image" aria-hidden="true">
-          {/* imagen decorativa: se carga desde CSS background */}
-        </div>
-
-        <div className="nuevo-form-container p-6">
+      <div className="nuevo-form-container p-6" style={{ width: '100%', maxWidth: 980, margin: '0 auto' }}>
           {/* Back button fijo en esquina superior izquierda con texto */}
           <button type="button" onClick={() => router.back()} aria-label="Regresar" className="back-fixed">
             ← Regresar
@@ -112,13 +106,22 @@ export default function NuevoLugar() {
 
           <div className="form-card relative">
 
-            <header className="mb-4" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <header className="mb-4" style={{ display: 'flex', gap: '0.75rem', flexDirection: 'column', alignItems: 'flex-start' }}>
               <h1 className="text-2xl font-extrabold">Registrar nuevo lugar turístico / Cultura</h1>
-
+              <p className="text-sm text-gray-600 mt-1">Comparte un lugar especial de la comunidad para que otros lo descubran.</p>
             </header>
 
             <form onSubmit={handleSubmit} className="form-grid">
-          <div className="form-field">
+          <div style={{ display: 'flex', gap: '0.5rem', width: '100%', justifyContent: 'space-between' }} className="span-2">
+            <div>
+              <button type="button" onClick={() => router.back()} className="btn-secondary">← Volver</button>
+            </div>
+            <div style={{ marginLeft: 'auto' }}>
+              <button type="button" onClick={() => router.push('/lugares')} className="btn-secondary">Cancelar</button>
+            </div>
+          </div>
+
+          <div className="form-field span-2">
             <label className="form-label">Nombre</label>
             <input
               name="nombre"
@@ -143,7 +146,7 @@ export default function NuevoLugar() {
             />
           </div>
 
-          <div className="form-row">
+          <div className="form-row span-2" style={{ alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
               <label className="form-label">URL de imagen</label>
               <input
@@ -202,18 +205,20 @@ export default function NuevoLugar() {
             </select>
           </div>
 
-          {errorMsg && <div className="text-red-600 text-sm">{errorMsg}</div>}
+          <div className="span-2">
+            {errorMsg && <div className="text-red-600 text-sm">{errorMsg}</div>}
+          </div>
 
-          <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={() => router.push('/lugares')}>Cancelar</button>
-            <button type="submit" disabled={saving} className="btn-primary">
-              {saving ? "Guardando..." : "Registrar lugar"}
-            </button>
+          <div className="form-actions span-2">
+            <div style={{ marginLeft: 'auto' }}>
+              <button type="submit" disabled={saving} className="btn-register">
+                {saving ? "Guardando..." : "Registrar lugar"}
+              </button>
+            </div>
           </div>
             </form>
+            </div>
           </div>
-        </div>
       </div>
-    </div>
   );
 }

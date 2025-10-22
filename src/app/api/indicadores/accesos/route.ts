@@ -2,7 +2,9 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
-  const { usuarioId, fuente } = await req.json(); // fuente: navegador/dispositivo
+  const body = await req.json().catch(() => ({}));
+  const { usuarioId, fuente } = body; // fuente: navegador/dispositivo
+  console.log("POST /api/indicadores/accesos llamado con:", { usuarioId, fuente });
 
   // Busca el indicador
   const indicador = await prisma.indicador.findFirst({

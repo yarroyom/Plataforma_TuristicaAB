@@ -20,23 +20,47 @@ export async function POST(req: NextRequest) {
     });
 
     // Actualización de perfil (actualizaciones realizadas)
-    await prisma.valorIndicador.create({
-      data: {
-        indicadorId: 57, // id de "Número de actualizaciones realizadas"
-        valorActual: 1,
-        fecha: new Date(),
-      },
-    });
+    // En lugar de crear un registro con valorActual = 1 (lo que produce
+    // registros unitarios y confunde la visualización), buscamos el último
+    // valor de hoy y lo incrementamos, manteniendo el mismo patrón que
+    // usan los endpoints en /api/indicadores/*
+    try {
+      const indicador = await prisma.indicador.findUnique({ where: { id: 57 } }).catch(() => null);
+      if (indicador) {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const ultimo = await prisma.valorIndicador.findFirst({
+          where: { indicadorId: indicador.id, fecha: { gte: hoy } },
+          orderBy: { fecha: "desc" },
+        });
+        const nuevoValor = ultimo ? ultimo.valorActual + 1 : 1;
+        await prisma.valorIndicador.create({
+          data: { indicadorId: indicador.id, valorActual: nuevoValor, fecha: new Date() },
+        });
+      } else {
+        // si no existe el indicador con id 57, crear un registro simple para no perder el evento
+        await prisma.valorIndicador.create({ data: { indicadorId: 57, valorActual: 1, fecha: new Date() } });
+      }
+    } catch (e) {
+      console.error("Error actualizando indicador 57 en usuario.route:", e);
+    }
 
-    // Registro de contenido agregado en el periodo (si aplica)
+    // Registro de contenido agregado en el periodo (si aplica) - hacerlo incremental por día
     if (foto || password) {
-      await prisma.valorIndicador.create({
-        data: {
-          indicadorId: 58, // <-- id de "Contenido agregado en el periodo"
-          valorActual: 1,
-          fecha: new Date(),
-        },
-      });
+      try {
+        const indicadorNombre = "Contenido agregado en el periodo";
+        const indicador = await prisma.indicador.findFirst({ where: { nombre: indicadorNombre } });
+        if (indicador) {
+          const hoy = new Date(); hoy.setHours(0,0,0,0);
+          const ultimo = await prisma.valorIndicador.findFirst({ where: { indicadorId: indicador.id, fecha: { gte: hoy } }, orderBy: { fecha: "desc" } });
+          const nuevoValor = ultimo ? (ultimo.valorActual ?? 0) + 1 : 1;
+          await prisma.valorIndicador.create({ data: { indicadorId: indicador.id, valorActual: nuevoValor, fecha: new Date() } });
+        } else {
+          await prisma.valorIndicador.create({ data: { indicadorId: 58, valorActual: 1, fecha: new Date() } });
+        }
+      } catch (e) {
+        console.error("Error registrando contenido agregado en usuario.route:", e);
+      }
     }
 
     return new Response(JSON.stringify({ ok: true }), {

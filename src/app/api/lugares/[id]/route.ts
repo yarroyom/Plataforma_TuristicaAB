@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma"; // ...existing import si ya lo tienes
+import { incrementIndicadorByName } from "@/lib/indicadores";
 
 // helper para resolver userId (acepta id numérico en cookie o JWT en Authorization)
 async function getUserIdFromReq(req: NextRequest): Promise<number | null> {
@@ -107,6 +108,15 @@ export async function PUT(req: NextRequest, context: any) {
       console.error("PUT /api/lugares update falló:", lastErr);
       return NextResponse.json({ error: "No se pudo actualizar: " + (lastErr?.message ?? "error interno") }, { status: 500 });
     }
+
+    // Registrar actualización (background)
+    (async () => {
+      try {
+        await incrementIndicadorByName("Número de actualizaciones realizadas");
+      } catch (e) {
+        console.warn("No se pudo registrar indicador de actualizaciones (lugares):", e);
+      }
+    })();
 
     return NextResponse.json({ ok: true, lugar: actualizado });
   } catch (err) {

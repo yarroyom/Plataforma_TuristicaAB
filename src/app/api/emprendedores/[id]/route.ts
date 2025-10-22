@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { incrementIndicadorByName } from "@/lib/indicadores";
 
 interface Params {
   params: { id: string };
@@ -39,6 +40,15 @@ export async function PUT(req: Request, { params }: Params) {
     where: { id },
     data,
   });
+
+  // Registrar actualización (no bloqueante)
+  (async () => {
+    try {
+      await incrementIndicadorByName("Número de actualizaciones realizadas");
+    } catch (e) {
+      console.warn("No se pudo registrar indicador de actualizaciones (emprendedores):", e);
+    }
+  })();
 
   return NextResponse.json(updatedPerfil);
 }

@@ -61,10 +61,11 @@ export async function GET(req: NextRequest) {
           AND r."creadoEn" >= ${inicio}
           AND r."creadoEn" <= ${fin}
       `;
-      const sum = res?.[0]?.sum !== null && res?.[0]?.sum !== undefined ? Number(res[0].sum) : 0;
-      const count = res?.[0]?.count ? Number(res[0].count) : 0;
-      const fecha = res?.[0]?.fecha ?? fin;
-      indicadorPromedioCulturales.valores = [{ valorActual: sum, fecha, count }];
+  const sum = res?.[0]?.sum !== null && res?.[0]?.sum !== undefined ? Number(res[0].sum) : 0;
+  const count = res?.[0]?.count ? Number(res[0].count) : 0;
+  const fecha = res?.[0]?.fecha ?? fin;
+  const avg = count > 0 ? Number((sum / count).toFixed(2)) : 0;
+  indicadorPromedioCulturales.valores = [{ valorActual: avg, fecha, count }];
     } else {
       const res: { sum: number | null; count: string | null; fecha: Date | null }[] = await prisma.$queryRaw`
         SELECT SUM(r.valor)::numeric AS sum, COUNT(r.valor)::text AS count, MAX(r."creadoEn") AS fecha
@@ -72,10 +73,11 @@ export async function GET(req: NextRequest) {
         JOIN "LugarTuristico" l ON r."lugarId" = l.id
         WHERE l."tipo" = 'CULTURAL'
       `;
-      const sum = res?.[0]?.sum !== null && res?.[0]?.sum !== undefined ? Number(res[0].sum) : 0;
-      const count = res?.[0]?.count ? Number(res[0].count) : 0;
-      const fecha = res?.[0]?.fecha ?? new Date();
-      indicadorPromedioCulturales.valores = [{ valorActual: sum, fecha, count }];
+  const sum = res?.[0]?.sum !== null && res?.[0]?.sum !== undefined ? Number(res[0].sum) : 0;
+  const count = res?.[0]?.count ? Number(res[0].count) : 0;
+  const fecha = res?.[0]?.fecha ?? new Date();
+  const avg = count > 0 ? Number((sum / count).toFixed(2)) : 0;
+  indicadorPromedioCulturales.valores = [{ valorActual: avg, fecha, count }];
     }
   }
 
@@ -94,10 +96,11 @@ export async function GET(req: NextRequest) {
           AND r."creadoEn" >= ${inicio}
           AND r."creadoEn" <= ${fin}
       `;
-      const sum = res?.[0]?.sum !== null && res?.[0]?.sum !== undefined ? Number(res[0].sum) : 0;
-      const count = res?.[0]?.count ? Number(res[0].count) : 0;
-      const fecha = res?.[0]?.fecha ?? fin;
-      indicadorPromedioTuristicos.valores = [{ valorActual: sum, fecha, count }];
+  const sum = res?.[0]?.sum !== null && res?.[0]?.sum !== undefined ? Number(res[0].sum) : 0;
+  const count = res?.[0]?.count ? Number(res[0].count) : 0;
+  const fecha = res?.[0]?.fecha ?? fin;
+  const avg = count > 0 ? Number((sum / count).toFixed(2)) : 0;
+  indicadorPromedioTuristicos.valores = [{ valorActual: avg, fecha, count }];
     } else {
       const res: { sum: number | null; count: string | null; fecha: Date | null }[] = await prisma.$queryRaw`
         SELECT SUM(r.valor)::numeric AS sum, COUNT(r.valor)::text AS count, MAX(r."creadoEn") AS fecha
@@ -105,10 +108,34 @@ export async function GET(req: NextRequest) {
         JOIN "LugarTuristico" l ON r."lugarId" = l.id
         WHERE l."tipo" = 'TURISTICO'
       `;
-      const sum = res?.[0]?.sum !== null && res?.[0]?.sum !== undefined ? Number(res[0].sum) : 0;
-      const count = res?.[0]?.count ? Number(res[0].count) : 0;
-      const fecha = res?.[0]?.fecha ?? new Date();
-      indicadorPromedioTuristicos.valores = [{ valorActual: sum, fecha, count }];
+  const sum = res?.[0]?.sum !== null && res?.[0]?.sum !== undefined ? Number(res[0].sum) : 0;
+  const count = res?.[0]?.count ? Number(res[0].count) : 0;
+  const fecha = res?.[0]?.fecha ?? new Date();
+  const avg = count > 0 ? Number((sum / count).toFixed(2)) : 0;
+  indicadorPromedioTuristicos.valores = [{ valorActual: avg, fecha, count }];
+    }
+  }
+
+  // Fallback: si la petición especificó un rango de fechas y algún indicador
+  // quedó sin valores (vacío), intentar recuperar el último registro
+  // conocido para ese indicador y usarlo como valor actual. Esto evita que
+  // la UI muestre vacíos cuando la BD tiene datos fuera del rango por TZ u
+  // otros motivos.
+  if (hasFechaRange && Array.isArray(indicadores)) {
+    for (const ind of indicadores) {
+      try {
+        if (!ind?.valores || ind.valores.length === 0) {
+          const ultimoRegistro = await prisma.valorIndicador.findFirst({
+            where: { indicadorId: ind.id },
+            orderBy: { fecha: "desc" },
+          });
+          if (ultimoRegistro) {
+            ind.valores = [ultimoRegistro];
+          }
+        }
+      } catch (e) {
+        // no bloquear la respuesta por un fallo en el fallback; continuar
+      }
     }
   }
 
