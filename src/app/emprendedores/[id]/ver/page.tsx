@@ -94,7 +94,10 @@ export default function VerEmprendedor() {
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
               <div className="flex flex-col gap-2">
                 <div><span className="font-semibold">Teléfono</span><div className="mt-1">{perfil.telefono || '—'}</div></div>
-                <div className="mt-2"><span className="font-semibold">Horario</span><div className="mt-1">{perfil.horario || 'No especificado'}</div></div>
+                {/* Mostrar horario sólo si existe y no es 'No especificado' */}
+                {perfil.horario && perfil.horario.trim() !== '' && perfil.horario !== 'No especificado' && (
+                  <div className="mt-2"><span className="font-semibold">Horario</span><div className="mt-1">{perfil.horario}</div></div>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
