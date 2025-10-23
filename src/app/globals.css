@@ -1551,6 +1551,50 @@ header button {
 }
 .personas-grid .card .btn-delete { height: 28px; padding: 0 0.5rem; font-size: 0.82rem; border-radius: 8px; font-weight: 600; }
 
+/* Emprendedor view: héroe limpio y profesional */
+.emprendedor-hero {
+  background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(250,250,250,0.9));
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+}
+.emprendedor-photo {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(2,6,23,0.08);
+}
+.back-button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #374151;
+  font-size: 18px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background .15s ease, transform .08s ease;
+}
+.back-button:hover { background: rgba(0,0,0,0.04); transform: translateY(-1px); }
+.contact-btn {
+  display: inline-block;
+  background: #374151; /* gris oscuro */
+  color: #ffffff; /* texto blanco */
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.contact-btn:hover { background: #1f2937; }
+.btn-primary {
+  background: linear-gradient(90deg,#2563eb,#1d4ed8);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+.btn-primary:hover { transform: translateY(-1px); }
+
 /* Redes sociales cards compact */
 .red-card { display:flex; align-items:center; gap:0.6rem; }
 .red-card .link { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1779,6 +1823,77 @@ header button {
   cursor: pointer;
 }
 .back-fixed:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.09); }
+
+/* Variante verde para la back-fixed en la esquina superior derecha */
+.back-fixed.green {
+  right: 18px;
+  left: auto;
+  background: linear-gradient(180deg, #ecfdf5, #dcfce7);
+  color: #065f46;
+  border: 1px solid rgba(6,78,59,0.12);
+}
+.back-fixed.green:hover { box-shadow: 0 12px 36px rgba(6,78,59,0.12); transform: translateY(-2px); }
+
+/* Badges y rating para la vista de emprendedor */
+.badge {
+  background: linear-gradient(90deg, rgba(250,204,21,0.12), rgba(220,252,231,0.12));
+  color: #064e3b;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border: 1px solid rgba(6,78,59,0.06);
+}
+.rating {
+  background: #fff7ed;
+  color: #92400e;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+}
+
+/* Mini galería de thumbnails */
+.mini-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+.mini-thumb {
+  width: 80px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* Ajustes para el héroe cuando hay una sola ficha (espacio más generoso) */
+.emprendedor-hero { padding: 28px; }
+.emprendedor-photo { width: 220px; height: 220px; border-radius: 12px; }
+@media (max-width: 640px) {
+  .back-fixed { top: 10px; right: 10px; left: auto; }
+  .emprendedor-photo { width: 140px; height: 140px; }
+  .mini-thumb { width: 60px; height: 44px; }
+}
+
+/* Botón de regresar mejorado para páginas de lugar */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg,#10b981,#059669);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(6,78,59,0.12);
+}
+.btn-back svg { color: #ffffff; }
+.btn-back:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(6,78,59,0.16); }
+.btn-back:focus { outline: 3px solid rgba(16,185,129,0.18); }
 
 @media (max-width: 640px) {
   .back-fixed { top: 10px; left: 8px; padding: 0.4rem 0.6rem; font-size: 0.92rem; }

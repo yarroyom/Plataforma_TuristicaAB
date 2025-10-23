@@ -419,10 +419,20 @@ export default function LugarDetalle() {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <button
-        onClick={() => router.back()}
-        className="text-blue-600 underline mb-4"
+        onClick={() => {
+          if (typeof window !== 'undefined' && window.history.length > 1) {
+            router.back();
+          } else {
+            router.push('/principal');
+          }
+        }}
+        className="btn-back mb-4"
+        aria-label="Volver a la página principal"
       >
-        ← Regresar
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span>Volver</span>
       </button>
 
       <div className="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col md:flex-row">
