@@ -61,7 +61,7 @@ export default function VerEmprendedor() {
       </button>
 
       <div className="max-w-4xl mx-auto emprendedor-hero">
-        <div className="flex gap-8 items-start">
+  <div className="emprendedor-row flex gap-8 items-start">
           <aside className="flex-shrink-0">
             {perfil.foto ? (
               <img src={perfil.foto} alt={perfil.nombre} className="emprendedor-photo" />

@@ -1871,10 +1871,42 @@ header button {
 /* Ajustes para el héroe cuando hay una sola ficha (espacio más generoso) */
 .emprendedor-hero { padding: 28px; }
 .emprendedor-photo { width: 220px; height: 220px; border-radius: 12px; }
-@media (max-width: 640px) {
-  .back-fixed { top: 10px; right: 10px; left: auto; }
+
+/* Responsive layout for emprendedor view: stack on small screens and center CTAs */
+.emprendedor-row { display: flex; gap: 1.25rem; align-items: flex-start; }
+.emprendedor-row aside { flex-shrink: 0; }
+.emprendedor-row main { flex: 1 1 auto; min-width: 0; }
+
+@media (max-width: 880px) {
+  .emprendedor-row { flex-direction: column; gap: 0.8rem; align-items: center; }
+  .emprendedor-row aside { width: auto; display:flex; flex-direction:column; align-items:center; }
   .emprendedor-photo { width: 140px; height: 140px; }
+  .mini-gallery { grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; max-width: 320px; }
   .mini-thumb { width: 60px; height: 44px; }
+
+  /* Make contact buttons full width and centered on small screens */
+  .emprendedor-row .contact-btn {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+  }
+
+  /* Owner actions (Editar/Eliminar) stack below and align center */
+  .emprendedor-row .ml-auto {
+    margin-left: 0 !important;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .emprendedor-photo { width: 120px; height: 120px; }
+  .mini-thumb { width: 48px; height: 36px; }
+  .back-fixed { top: 8px; left: 8px; padding: 0.35rem 0.5rem; font-size: 0.9rem; }
 }
 
 /* Botón de regresar mejorado para páginas de lugar */
