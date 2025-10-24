@@ -380,7 +380,7 @@ export default function Principal() {
           <div className="fixed inset-0 z-60 flex items-center justify-center">
             <div className="fixed inset-0 bg-black opacity-40" onClick={() => setShowRatingModal(false)} />
             <div className="bg-white rounded-lg shadow-lg p-6 z-70 w-full max-w-sm">
-              <h3 className="text-lg font-bold mb-2">¿Cómo calificarías la plataforma?</h3>
+              <h3 className="text-lg font-bold mb-2">¿Qué tan fácil se le hizo encontrar la información?</h3>
               <p className="text-sm text-gray-600 mb-4">Del 1 al 5, tu opinión nos ayuda a mejorar.</p>
               <div className="flex gap-2 justify-center mb-4">
                 {[1,2,3,4,5].map((v) => (
