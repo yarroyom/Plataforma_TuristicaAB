@@ -100,7 +100,8 @@ export default function Principal() {
         const nombreUsuario = usuarioLogueado?.nombre ? String(usuarioLogueado.nombre) : null;
         const idUsuario = usuarioLogueado?.id ? String(usuarioLogueado.id) : null;
         const usuarioInfo = nombreUsuario ? ` por ${nombreUsuario}${idUsuario ? ` (id: ${idUsuario})` : ""}` : "";
-        const mensaje = `Calificación de la plataforma: ${ratingValue} / 5${usuarioInfo}`;
+  const pregunta = "¿Qué tan fácil se le hizo encontrar la información?";
+  const mensaje = `${pregunta} — Calificación de la plataforma: ${ratingValue} / 5${usuarioInfo}`;
         await fetch("/api/notificaciones", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
