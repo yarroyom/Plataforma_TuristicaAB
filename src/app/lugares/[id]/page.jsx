@@ -20,6 +20,7 @@ export default function LugarDetalle() {
   const [loadingCalificacion, setLoadingCalificacion] = useState(false);
   const [perfilFacebook, setPerfilFacebook] = useState(null);
   const [redes, setRedes] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Obtener usuario logueado real
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function LugarDetalle() {
         console.log("Lugar recibido:", data); // <-- log para depuración
         setLugar(data);
         setDescripcionEdit(data.descripcion || "");
+        setCurrentImageIndex(0);
       });
     // Obtener reseñas reales desde el backend
     fetch(`/api/resenas?lugarId=${id}`)
@@ -438,13 +440,60 @@ export default function LugarDetalle() {
       <div className="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col md:flex-row">
         {/* Panel principal */}
         <div className="md:w-2/3 w-full">
-          {lugar.imagen_url && (
-            <img
-              src={lugar.imagen_url}
-              alt={lugar.nombre}
-              className="w-full h-64 object-contain bg-gray-100"
-            />
-          )}
+            {/** Image slider: soporta una o varias URL separadas por comas o saltos de línea */}
+            {(() => {
+              const raw = lugar.imagen_url || "";
+              const images = raw
+                .split(/\r?\n|\s*,\s*/)
+                .map(s => s.trim())
+                .filter(Boolean)
+                .map((u) => {
+                  if (!u) return null;
+                  if (/^https?:\/\//i.test(u)) return u;
+                  if (u.startsWith('/')) return u;
+                  return `/${u}`;
+                })
+                .filter(Boolean);
+              const total = images.length;
+              const current = Math.min(Math.max(0, currentImageIndex), Math.max(0, total - 1));
+
+              const prev = () => setCurrentImageIndex((i) => (i - 1 + total) % total);
+              const next = () => setCurrentImageIndex((i) => (i + 1) % total);
+
+              if (total === 0) return null;
+
+              return (
+                <div className="image-slider">
+                  <div className="relative bg-gray-100 flex items-center justify-center h-64">
+                    {total > 1 && (
+                      <button data-testid="lugar-prev" aria-label="Anterior" onClick={prev} className="slider-arrow left">‹</button>
+                    )}
+
+                    <img src={images[current]} alt={`${lugar.nombre} foto ${current+1}`} className="w-full h-64 object-contain bg-gray-100" />
+
+                    {total > 1 && (
+                      <button data-testid="lugar-next" aria-label="Siguiente" onClick={next} className="slider-arrow right">›</button>
+                    )}
+                  </div>
+
+                  {total > 1 && (
+                    <div className="flex gap-2 mt-2 overflow-auto px-4">
+                      {images.map((src, i) => (
+                        <img
+                          key={i}
+                          data-testid={`lugar-thumb-${i}`}
+                          src={src}
+                          alt={`thumb ${i+1}`}
+                          className={`slide-thumb ${i === current ? 'active' : ''}`}
+                          onClick={() => setCurrentImageIndex(i)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           <div className="p-6">
             <h1 className="text-3xl font-bold mb-2 text-blue-700">{lugar.nombre}</h1>
             {/* Botón para compartir solo en Facebook usando el perfil guardado */}

@@ -148,20 +148,27 @@ export default function NuevoLugar() {
 
           <div className="form-row span-2" style={{ alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
-              <label className="form-label">URL de imagen</label>
-              <input
+              <label className="form-label">URLs de imagen</label>
+              <textarea
                 name="imagen_url"
-                placeholder="URL de imagen"
+                placeholder={"Pega una o varias URLs de imagen. Puedes pegarlas una por línea o separadas por comas."}
                 value={form.imagen_url}
                 onChange={handleChange}
                 className="border p-2 rounded input-shadow w-full"
+                rows={3}
               />
+              <div className="text-xs text-gray-500 mt-1">Ejemplo: https://ejemplo.com/1.jpg{"\n"}https://ejemplo.com/2.jpg</div>
             </div>
-            {form.imagen_url && (
-              <div className="image-preview-wrap">
-                <img src={form.imagen_url} alt="preview" className="image-preview" onError={(e)=>{(e.target as HTMLImageElement).style.display='none'}} />
-              </div>
-            )}
+            {form.imagen_url && (() => {
+              const raw = form.imagen_url || "";
+              const images = raw.split(/\r?\n|\s*,\s*/).map(s => s.trim()).filter(Boolean);
+              const first = images[0] || null;
+              return first ? (
+                <div className="image-preview-wrap">
+                  <img src={first} alt="preview" className="image-preview" onError={(e)=>{(e.target as HTMLImageElement).style.display='none'}} />
+                </div>
+              ) : null;
+            })()}
           </div>
 
           <div className="form-row">

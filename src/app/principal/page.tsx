@@ -17,6 +17,17 @@ export default function Principal() {
   // Nuevo estado para saber cuándo se cargó el usuario (evita flicker)
   const [userLoaded, setUserLoaded] = useState(false);
   const [lugares, setLugares] = useState<Lugar[]>([]);
+  // Mantener por defecto la portada original (iglesia.jpg) si no hay otra imagen disponible
+  const [portadaUrl, setPortadaUrl] = useState<string | null>('/images/lugares/iglesia.jpg');
+
+  const normalizeImageUrl = (raw?: string | null) => {
+    if (!raw) return null;
+    const s = String(raw).trim();
+    if (!s) return null;
+    if (/^https?:\/\//i.test(s)) return s;
+    if (s.startsWith("/")) return s;
+    return `/${s}`;
+  };
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredLugares, setFilteredLugares] = useState<Lugar[]>([]);
   const [toast, setToast] = useState<{ mensaje: string; visible: boolean }>({
@@ -45,6 +56,7 @@ export default function Principal() {
         console.log("Lugares recibidos:", data); // <-- log para depuración
         setLugares(data);
         setFilteredLugares(data || []);
+        // No cambiar la portada: la portada será la imagen por defecto (iglesia.jpg)
       });
   }, []);
 
@@ -91,6 +103,11 @@ export default function Principal() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingValue, setRatingValue] = useState<number | null>(null);
   const [ratingLoading, setRatingLoading] = useState(false);
+  // Edit modal para imagenes de lugar (ADMIN)
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingLugarId, setEditingLugarId] = useState<number | null>(null);
+  const [editImagenText, setEditImagenText] = useState<string>("");
+  const [editLoading, setEditLoading] = useState(false);
 
   const submitRatingAndLogout = async () => {
     // Enviar la calificación (si el usuario seleccionó una)
@@ -167,6 +184,42 @@ export default function Principal() {
     }
   };
 
+  const openEditModal = (e: React.MouseEvent, lugar: Lugar) => {
+    e.stopPropagation();
+    setEditingLugarId(lugar.id);
+    setEditImagenText(lugar.imagen_url || "");
+    setShowEditModal(true);
+  };
+
+  const saveImagenEdit = async () => {
+    if (editingLugarId == null) return;
+    setEditLoading(true);
+    try {
+      const res = await fetch(`/api/lugares/${editingLugarId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ imagen_url: editImagenText }),
+      });
+      const body = await (res.headers.get("content-type")?.includes("application/json") ? res.json() : res.text().then(t => ({ message: t })));
+      if (res.ok) {
+        // actualizar lista localmente
+        setLugares(prev => prev.map(l => l.id === editingLugarId ? { ...l, imagen_url: editImagenText } : l));
+        setFilteredLugares(prev => prev.map(l => l.id === editingLugarId ? { ...l, imagen_url: editImagenText } : l));
+        setShowEditModal(false);
+        setEditingLugarId(null);
+        setToast({ mensaje: "Imagen(es) actualizada(s)", visible: true });
+        setTimeout(() => setToast({ mensaje: "", visible: false }), 3000);
+      } else {
+        alert(body?.error || body?.message || "No se pudo actualizar la imagen");
+      }
+    } catch (err) {
+      alert("Error de conexión al guardar la imagen");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   // Preparar contenido de lugares fuera del JSX para evitar errores de parse
   const lugaresContent =
     filteredLugares.length === 0 ? (
@@ -186,7 +239,20 @@ export default function Principal() {
           >
             <div className="card-lugar-thumb">
               {l.imagen_url ? (
-                <img src={l.imagen_url} alt={l.nombre} className="w-full h-full object-cover rounded-l" />
+                (() => {
+                  // Soportar múltiples URLs en un mismo campo (comma o saltos de línea) y mostrar solo la primera
+                  const urls = String(l.imagen_url)
+                    .split(/\r?\n|\s*,\s*/)
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+                  const primera = urls.length > 0 ? urls[0] : null;
+                  const primeraN = normalizeImageUrl(primera);
+                  return primeraN ? (
+                    <img src={primeraN} alt={l.nombre} className="w-full h-full object-cover rounded-l" />
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">Sin imagen</div>
+                  );
+                })()
               ) : (
                 <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">Sin imagen</div>
               )}
@@ -194,19 +260,28 @@ export default function Principal() {
             <div className="card-lugar-body">
               <div className="font-semibold text-sm text-blue-600 hover:underline mb-1">{l.nombre}</div>
               {/* espacio para descripción o meta si se quiere */}
-              <div className="flex items-center justify-between mt-auto">
+                <div className="flex items-center justify-between mt-auto">
                 <div className="text-xs text-gray-500">&nbsp;</div>
                 {userLoaded && usuarioLogueado.rol === "ADMIN" && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEliminar(l.id);
-                    }}
-                    className="btn-delete"
-                    title="Eliminar lugar"
-                  >
-                    Eliminar
-                  </button>
+                  <div className="flex gap-2 items-center">
+                    <button
+                      onClick={(e) => openEditModal(e, l)}
+                      className="px-3 py-1 rounded bg-blue-600 text-white"
+                      title="Editar imágenes"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEliminar(l.id);
+                      }}
+                      className="btn-delete"
+                      title="Eliminar lugar"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -239,7 +314,15 @@ export default function Principal() {
       <div className="principal-content w-full"> {/* sin padding-top; el espacio se aplica al grid abajo */}
         {/* Hero visual (solo diseño) */}
         <section className="principal-hero relative overflow-hidden rounded-lg mb-6">
-          <div className="principal-hero-bg" aria-hidden />
+          <div
+            className="principal-hero-bg"
+            aria-hidden
+            style={
+              portadaUrl
+                ? { backgroundImage: `url(${portadaUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+                : undefined
+            }
+          />
           <div className="principal-hero-inner container p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
             <div className="flex-1 flex items-center gap-4">
               <button
@@ -394,6 +477,29 @@ export default function Principal() {
                 <button onClick={skipRatingAndLogout} className="px-3 py-2 rounded bg-gray-200">Omitir</button>
                 <button onClick={submitRatingAndLogout} className="px-3 py-2 rounded bg-green-600 text-white" disabled={ratingLoading}>
                   {ratingLoading ? 'Enviando...' : 'Enviar y cerrar sesión'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de edición de imagenes (ADMIN) */}
+        {showEditModal && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center">
+            <div className="fixed inset-0 bg-black opacity-40" onClick={() => setShowEditModal(false)} />
+            <div className="bg-white rounded-lg shadow-lg p-6 z-70 w-full max-w-lg">
+              <h3 className="text-lg font-bold mb-2">Editar imágenes del lugar</h3>
+              <p className="text-sm text-gray-600 mb-2">Pega una o varias URLs separadas por comas o saltos de línea. La primera URL se usará como miniatura.</p>
+              <textarea
+                value={editImagenText}
+                onChange={(e) => setEditImagenText(e.target.value)}
+                className="w-full border rounded p-2 mb-3"
+                rows={6}
+              />
+              <div className="flex gap-3 justify-end">
+                <button onClick={() => setShowEditModal(false)} className="px-3 py-2 rounded bg-gray-200">Cancelar</button>
+                <button onClick={saveImagenEdit} className="px-3 py-2 rounded bg-green-600 text-white" disabled={editLoading}>
+                  {editLoading ? 'Guardando...' : 'Guardar cambios'}
                 </button>
               </div>
             </div>
