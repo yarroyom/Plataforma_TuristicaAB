@@ -44,30 +44,115 @@ export default function EstadisticaPage() {
 
   // Función para exportar a Excel
   const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(indicadores.map(i => ({
-      Indicador: i.nombre,
-      Categoría: i.categoria,
-      Meta: i.meta,
-      ValorActual: i.valores[0]?.valorActual ?? "",
-      Unidad: i.unidad,
-      Fecha: i.valores[0]?.fecha ?? "",
-    })));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Indicadores");
-    XLSX.writeFile(wb, "estadisticas.xlsx");
+    try {
+      // Preparar filas con valores normalizados y campos calculados
+      const rows = indicadores.map(i => {
+        const valor = i.valores?.[0]?.valorActual ?? null;
+        const fechaRaw = i.valores?.[0]?.fecha ?? null;
+        const fechaStr = fechaRaw ? new Date(fechaRaw).toISOString().slice(0, 10) : "";
+        const cumplimiento = (valor && i.meta) ? Math.round((Number(valor) / Number(i.meta)) * 100) : "";
+        return {
+          Indicador: i.nombre || "",
+          Categoria: i.categoria || "",
+          "Valor Actual": valor ?? "",
+          Meta: i.meta ?? "",
+          Unidad: i.unidad ?? "",
+          Fecha: fechaStr,
+          Cumplimiento: cumplimiento !== "" ? `${cumplimiento}%` : "",
+        };
+      });
+
+      // Si no hay filas, creamos una fila vacía para que el archivo no falle
+      const safeRows = rows.length ? rows : [{ Indicador: "Sin datos", Categoria: "", "Valor Actual": "", Meta: "", Unidad: "", Fecha: "", Cumplimiento: "" }];
+
+      const ws = XLSX.utils.json_to_sheet(safeRows);
+      // Ajustar anchura de columnas básica (opcional)
+      const colWidths = Object.keys(safeRows[0] || {}).map(() => ({ wch: 20 }));
+      ws["!cols"] = colWidths;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Indicadores");
+
+      // Usar write para obtener un array buffer y forzar descarga vía Blob (más fiable en navegadores)
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'estadisticas.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exportando a Excel:', err);
+      alert('No se pudo generar el archivo Excel. Revisa la consola para más detalles.');
+    }
   };
 
   // Función para exportar a PDF
   const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Reporte de Indicadores", 10, 10);
-    indicadores.forEach((i, idx) => {
-      doc.text(
-        `${i.nombre} (${i.categoria}): ${i.valores[0]?.valorActual ?? ""} / Meta: ${i.meta}`,
-        10,
-        20 + idx * 10
-      );
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    let y = 40;
+    const lineHeight = 14;
+
+    doc.setFontSize(14);
+    doc.text("Reporte de Indicadores", margin, y);
+    y += 24;
+
+    // Encabezados
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+    const headers = ["Indicador", "Categoría", "Valor Actual", "Meta", "Unidad", "Fecha", "Cumplimiento"];
+    const colCount = headers.length;
+    const usableWidth = pageWidth - margin * 2;
+    const colWidth = usableWidth / colCount;
+
+    // Dibujar cabecera
+    headers.forEach((h, i) => {
+      const x = margin + i * colWidth + 2;
+      doc.text(String(h), x, y);
     });
+    y += lineHeight;
+  doc.setFont('helvetica', 'normal');
+
+    // Filas
+    indicadores.forEach((i) => {
+      const valor = i.valores?.[0]?.valorActual ?? "";
+      const fechaRaw = i.valores?.[0]?.fecha ?? null;
+      const fechaStr = fechaRaw ? new Date(fechaRaw).toLocaleDateString() : "";
+      const cumplimiento = (valor && i.meta) ? `${Math.round((Number(valor) / Number(i.meta)) * 100)}%` : "";
+
+      const cols = [
+        String(i.nombre ?? ""),
+        String(i.categoria ?? ""),
+        String(valor ?? ""),
+        String(i.meta ?? ""),
+        String(i.unidad ?? ""),
+        fechaStr,
+        cumplimiento,
+      ];
+
+      // Si no hay espacio en la página, crear nueva
+      if (y + lineHeight > doc.internal.pageSize.getHeight() - margin) {
+        doc.addPage();
+        y = margin;
+      }
+
+      cols.forEach((c, idx) => {
+        const x = margin + idx * colWidth + 2;
+        // Ajuste simple: recortar si demasiado largo
+        const text = String(c);
+        const maxChars = Math.floor(colWidth / 6); // aproximación
+        const out = text.length > maxChars ? text.slice(0, maxChars - 3) + '...' : text;
+        doc.text(out, x, y);
+      });
+
+      y += lineHeight;
+    });
+
     doc.save("estadisticas.pdf");
   };
 
