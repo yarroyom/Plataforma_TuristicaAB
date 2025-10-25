@@ -35,6 +35,8 @@ export default function NuevoComentarioPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // confirmar antes de enviar
+    if (!confirm('¿Enviar este comentario?')) return;
     setLoading(true);
     const res = await fetch("/api/resenas", {
       method: "POST",
@@ -50,6 +52,7 @@ export default function NuevoComentarioPage() {
     setLoading(false);
     if (res.ok) {
       router.push(`/lugares/${form.lugarId}`);
+      try { alert('Comentario enviado correctamente'); } catch {}
     } else {
       const data = await res.json();
       alert(data.error || "Error al enviar comentario");

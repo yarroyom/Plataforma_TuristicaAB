@@ -57,6 +57,8 @@ export default function FavoritosPage() {
   }, []);
 
   const handleEliminar = async (lugarId: number) => {
+    // confirmación antes de eliminar
+    if (!confirm("¿Eliminar este lugar de tus favoritos?")) return;
     if (deletingIds.includes(lugarId)) return;
     setError("");
     setDeletingIds(prev => [...prev, lugarId]);
@@ -86,6 +88,7 @@ export default function FavoritosPage() {
 
       if (res && res.ok) {
         setFavoritos(prev => prev.filter(l => l.id !== lugarId));
+        try { alert('Lugar eliminado de favoritos'); } catch {}
       } else {
         const msg = data?.error || data?.message || "No se pudo eliminar favorito";
         setError(String(msg));

@@ -41,6 +41,7 @@ export default function RedesSocialesPage() {
       setMensaje("Completa todos los campos.");
       return;
     }
+    if (!confirm('¿Guardar este perfil de red social?')) return;
     const res = await fetch("/api/redes-sociales", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -56,6 +57,7 @@ export default function RedesSocialesPage() {
       fetch(`/api/redes-sociales`)
         .then(res => res.json())
         .then(rs => setRedes(rs));
+      try { alert('Red social guardada correctamente'); } catch {}
     } else {
       setMensaje("Error al guardar la red social.");
     }
@@ -64,7 +66,7 @@ export default function RedesSocialesPage() {
   const handleDelete = async (r) => {
     if (!usuarioId) return setMensaje('No autorizado');
     // Confirmación simple
-    if (!confirm(`Eliminar perfil '${r.nombre}'? Esta acción no se puede deshacer.`)) return;
+  if (!confirm(`Eliminar perfil '${r.nombre}'? Esta acción no se puede deshacer.`)) return;
 
     const res = await fetch('/api/redes-sociales', {
       method: 'DELETE',
@@ -76,6 +78,7 @@ export default function RedesSocialesPage() {
       setMensaje('Perfil eliminado');
       // Refrescar lista
       fetch(`/api/redes-sociales`).then(res => res.json()).then(rs => setRedes(rs));
+      try { alert('Perfil eliminado correctamente'); } catch {}
     } else {
       const d = await res.json().catch(() => ({}));
       setMensaje(d?.error || 'Error al eliminar');

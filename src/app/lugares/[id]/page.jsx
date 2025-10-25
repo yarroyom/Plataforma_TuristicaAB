@@ -143,6 +143,7 @@ export default function LugarDetalle() {
   const handleAgregarResena = async (e) => {
     e.preventDefault();
     if (!nuevaResena.trim()) return;
+    if (!confirm('¿Publicar este comentario?')) return;
     try {
       const res = await fetch("/api/resenas", {
         method: "POST",
@@ -157,6 +158,7 @@ export default function LugarDetalle() {
       if (res.ok) {
         setResenas([data.resena, ...resenas]);
         setNuevaResena("");
+        try { alert('Comentario publicado correctamente'); } catch {}
       } else {
         alert(data.error || "Error al guardar la reseña");
       }
@@ -259,6 +261,7 @@ export default function LugarDetalle() {
     setFavLoading(true);
     try {
       if (esFavorito) {
+        if (!confirm('¿Quitar este lugar de tus favoritos?')) { setFavLoading(false); return; }
         const res = await fetch("/api/favoritos", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -272,8 +275,10 @@ export default function LugarDetalle() {
           return;
         }
         setEsFavorito(false);
+        try { alert('Lugar quitado de favoritos'); } catch {}
         try { localStorage.setItem("favorito_removed", String(id)); setTimeout(() => localStorage.removeItem("favorito_removed"), 500); } catch {}
       } else {
+        if (!confirm('¿Agregar este lugar a tus favoritos?')) { setFavLoading(false); return; }
         const res = await fetch("/api/favoritos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -287,6 +292,7 @@ export default function LugarDetalle() {
           return;
         }
         setEsFavorito(true);
+        try { alert('Lugar agregado a favoritos'); } catch {}
         try {
           const favObj = data.favorito ?? { lugarId: Number(id) };
           localStorage.setItem("favorito_added", JSON.stringify(favObj));
