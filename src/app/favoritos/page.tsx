@@ -15,6 +15,20 @@ export default function FavoritosPage() {
   const [error, setError] = useState("");
   const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
+  const normalizeImageUrl = (raw?: string | null) => {
+    if (!raw) return null;
+    // Si el campo contiene varias URLs separadas por comas o saltos de línea,
+    // tomar la primera válida.
+    const first = String(raw)
+      .split(/\r?\n|\s*,\s*/)
+      .map(s => s.trim())
+      .filter(Boolean)[0];
+    if (!first) return null;
+    if (/^https?:\/\//i.test(first)) return first;
+    if (first.startsWith("/")) return first;
+    return `/${first}`;
+  };
+
   useEffect(() => {
     fetch("/api/favoritos", { credentials: "include" })
       .then(async res => {
@@ -113,13 +127,18 @@ export default function FavoritosPage() {
               className="favorito-card glass w-48 text-center cursor-pointer hover:shadow-lg relative"
               onClick={() => router.push(`/lugares/${l.id}`)}
             >
-              {l.imagen_url && (
-                <img
-                  src={l.imagen_url}
-                  alt={l.nombre}
-                  className="w-full rounded"
-                />
-              )}
+              {(() => {
+                const src = normalizeImageUrl(l.imagen_url) || '/images/lugares/iglesia.jpg';
+                return (
+                  <img
+                    src={src}
+                    alt={l.nombre}
+                    data-testid={`fav-img-${l.id}`}
+                    className="w-full rounded"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/lugares/iglesia.jpg'; }}
+                  />
+                );
+              })()}
               <div className="block mt-2 font-bold text-blue-600 hover:underline">
                 {l.nombre}
               </div>

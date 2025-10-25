@@ -56,10 +56,9 @@ export async function PUT(req: NextRequest, context: any) {
 
     // Autorización: permitir solo autor o ADMIN si aplica
     const userId = await getUserIdFromReq(req);
-    // intentar obtener lugar actual para comprobar propietario (si existe campo usuarioId)
+   
     const existente = await prisma.lugares?.findUnique ? await (prisma as any).lugares.findUnique({ where: { id: lugarId } }) : await prisma.lugar?.findUnique ? await (prisma as any).lugar.findUnique({ where: { id: lugarId } }) : null;
-    // si no encontró por nombres probados, intentar buscar entre posibles modelos (fallback genérico)
-    // (si tu prisma usa otro nombre para el modelo, ajusta arriba)
+    
     if (!existente) {
       // intentar con 'lugar' singular
       try {
