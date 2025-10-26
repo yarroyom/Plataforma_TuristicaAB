@@ -412,7 +412,30 @@ export default function LugarDetalle() {
         "_blank"
       );
     }
-    // Puedes agregar lógica para otras redes sociales aquí
+    // Si la red tiene un link de perfil configurado, abrirlo en nueva pestaña.
+    // Esto cubre casos como Instagram donde no hay un share URL estándar.
+    if (red.link) {
+      try {
+        let link = String(red.link).trim();
+        // Si es un enlace relativo, convertir a absoluto usando el origen actual
+        if (!/^https?:\/\//i.test(link) && link.startsWith('/')) {
+          link = window.location.origin + link;
+        }
+        // Si no tiene protocolo y parece un dominio, añadir https://
+        if (!/^https?:\/\//i.test(link) && /^[^\s]+\.[^\s]{2,}/.test(link)) {
+          link = 'https://' + link;
+        }
+        window.open(link, '_blank', 'noopener,noreferrer');
+        return;
+      } catch (e) {
+        console.warn('Error abriendo link de red social:', e);
+      }
+    }
+
+    // Si no hay link y no es facebook, informar al usuario
+    if (red.nombre && red.nombre.toLowerCase() !== 'facebook') {
+      alert('No hay un enlace configurado para esta red social. Añádelo en el módulo de Redes Sociales.');
+    }
   };
 
   const urlLugar = typeof window !== "undefined" ? window.location.href : "";
@@ -532,7 +555,7 @@ export default function LugarDetalle() {
                 className="bg-blue-600 text-white px-3 py-1 rounded"
                 onClick={compartirEnFacebook}
               >
-                Compartir en mi Facebook
+                Compartir
               </button>
             </div>
             {/* Promedio de calificaciones */}
@@ -614,7 +637,7 @@ export default function LugarDetalle() {
                   </>
                 ) : (
                   <>
-                    <p className="text-gray-700 mb-4">{lugar.descripcion}</p>
+                    <p className="text-gray-700 mb-4 historia-text">{lugar.descripcion}</p>
                     <button
                       className="bg-yellow-500 text-white px-3 py-1 rounded mb-4"
                       onClick={() => setEditMode(true)}
@@ -625,7 +648,7 @@ export default function LugarDetalle() {
                 )}
               </>
             ) : (
-              <p className="text-gray-700 mb-4">{lugar.descripcion}</p>
+              <p className="text-gray-700 mb-4 historia-text">{lugar.descripcion}</p>
             )}
           </div>
         </div>
