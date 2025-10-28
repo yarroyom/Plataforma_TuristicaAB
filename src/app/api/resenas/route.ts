@@ -119,10 +119,17 @@ export async function POST(req: NextRequest) {
     (async () => {
       try {
         const lid = Number(resena.lugarId ?? lugarId);
+        console.log("Background indicador: procesando comentario para lugarId=", lid);
         if (!Number.isFinite(lid) || lid <= 0) return;
         const lugarDb = await findLugarById(lid);
-        if (!lugarDb) return;
-        if (!isCulturalRecord(lugarDb)) return;
+        if (!lugarDb) {
+          console.log("Background indicador: lugar no encontrado para id=", lid);
+          return;
+        }
+        if (!isCulturalRecord(lugarDb)) {
+          console.log("Background indicador: registro no cultural, omitiendo indicador para lugarId=", lid);
+          return;
+        }
 
         const indicadorNombre = "Cantidad de comentarios sobre eventos culturales";
         // obtener o crear indicador (meta opcional)
@@ -130,23 +137,41 @@ export async function POST(req: NextRequest) {
         if (!indicador) {
           try {
             indicador = await prisma.indicador.create({
-              data: { nombre: indicadorNombre, categoria: "Promoción Cultural", descripcion: "Conteo diario de comentarios en actividades culturales" }
+              data: { nombre: indicadorNombre, categoria: "Promoción Cultural" }
             });
+            console.log("Background indicador: indicador creado", indicador?.id);
           } catch (err) {
-            // fallback si el modelo no acepta categoria/descripcion
-            indicador = await prisma.indicador.create({ data: { nombre: indicadorNombre } });
+            console.warn("Background indicador: fallo al crear indicador (intentando fallback):", err);
+            try {
+              indicador = await prisma.indicador.create({ data: { nombre: indicadorNombre } });
+            } catch (inner) {
+              console.warn("Background indicador: fallback de creación falló:", inner);
+            }
           }
         }
 
-        const hoy = new Date(); hoy.setHours(0,0,0,0);
-        const ultimo = await prisma.valorIndicador.findFirst({
-          where: { indicadorId: indicador.id, fecha: { gte: hoy } },
-          orderBy: { fecha: "desc" },
-        });
-        const nuevoValor = ultimo ? ultimo.valorActual + 1 : 1;
-        await prisma.valorIndicador.create({
-          data: { indicadorId: indicador.id, valorActual: nuevoValor, fecha: new Date() }
-        });
+        if (indicador && indicador.id) {
+          const hoy = new Date(); hoy.setHours(0,0,0,0);
+          const ultimo = await prisma.valorIndicador.findFirst({
+            where: { indicadorId: indicador.id, fecha: { gte: hoy } },
+            orderBy: { fecha: "desc" },
+          });
+          const nuevoValor = ultimo ? ultimo.valorActual + 1 : 1;
+          const created = await prisma.valorIndicador.create({
+            data: { indicadorId: indicador.id, valorActual: nuevoValor, fecha: new Date() }
+          });
+          console.log("Background indicador: valor creado", { indicadorId: indicador.id, nuevoValor, createdId: created?.id });
+        } else {
+          // como último recurso, intentar usar helper incrementIndicadorByName si existe
+          try {
+            // @ts-ignore - may be defined elsewhere
+            const { incrementIndicadorByName } = await import("@/lib/indicadores");
+            await incrementIndicadorByName(indicadorNombre);
+            console.log("Background indicador: incrementIndicadorByName fallback ejecutado para", indicadorNombre);
+          } catch (fallbackErr) {
+            console.warn("Background indicador: no se pudo actualizar indicador de comentarios culturales (background):", fallbackErr);
+          }
+        }
       } catch (e) {
         console.warn("No se pudo actualizar indicador de comentarios culturales (background):", e);
       }

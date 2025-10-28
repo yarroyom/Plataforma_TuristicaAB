@@ -76,7 +76,8 @@ export default function NuevoLugar() {
 
       if (res.ok) {
         alert("Lugar registrado correctamente");
-        router.push("/lugares");
+        // Después de crear un lugar, redirigir directamente a la página principal
+        router.push("/principal");
         return;
       }
 

@@ -8,7 +8,7 @@ interface Lugar {
   id: number;
   nombre: string;
   imagen_url?: string;
-  // Puedes agregar otros campos si los usas
+ 
 }
 
 export default function Principal() {
@@ -508,7 +508,7 @@ export default function Principal() {
 
         {/* Contenido principal: pantalla de lugares */}
         <main className="p-4">
-          <h2 className="page-title text-base md:text-lg">Lugares Turísticos</h2>
+          <h2 className="page-title text-base md:text-lg">Lugares Turísticos y Cultura</h2>
           {/* Botón solo para administrador */}
           {userLoaded && usuarioLogueado.rol === "ADMIN" && (
             <button
