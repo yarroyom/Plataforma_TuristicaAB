@@ -445,6 +445,9 @@ export default function LugarDetalle() {
     alert("Enlace copiado al portapapeles");
   };
 
+  // Ocultar botón "Cómo llegar" para casos especiales (ej: Ganaderia id=27)
+  const hideComoLlegar = lugar && (String(lugar.nombre || "").toLowerCase().includes("ganaderia") || Number(id) === 27);
+
   if (!lugar) return <p className="p-4">Lugar no encontrado...</p>;
 
   return (
@@ -568,18 +571,21 @@ export default function LugarDetalle() {
             {/* Botón de ubicación y navegación */}
             {lugar.latitud && lugar.longitud && (
               <div className="mb-4 flex flex-col gap-2">
-                <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
-                  onClick={() => {
-                    registrarUsoComoLlegar();
-                    window.open(
-                      `https://www.google.com/maps/dir/?api=1&destination=${lugar.latitud},${lugar.longitud}`,
-                      "_blank"
-                    );
-                  }}
-                >
-                  Cómo llegar (Google Maps)
-                </button>
+                {/* Mostrar el botón 'Cómo llegar' solo si no está oculto para este lugar */}
+                {!hideComoLlegar && (
+                  <button
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                    onClick={() => {
+                      registrarUsoComoLlegar();
+                      window.open(
+                        `https://www.google.com/maps/dir/?api=1&destination=${lugar.latitud},${lugar.longitud}`,
+                        "_blank"
+                      );
+                    }}
+                  >
+                    Cómo llegar (Google Maps)
+                  </button>
+                )}
                 <div className="mt-2 text-gray-700">
                   <span className="font-semibold">Ubicación: </span>
                   {lugar.direccion

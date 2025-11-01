@@ -59,15 +59,104 @@ export default function EstadisticaPage() {
 
   // Función para exportar a PDF
   const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Reporte de Indicadores", 10, 10);
-    indicadores.forEach((i, idx) => {
-      doc.text(
-        `${i.nombre} (${i.categoria}): ${i.valores[0]?.valorActual ?? ""} / Meta: ${i.meta}`,
-        10,
-        20 + idx * 10
-      );
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const marginLeft = 10;
+    const marginTop = 12;
+    const marginBottom = 12;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const usableWidth = pageWidth - marginLeft * 2;
+
+    // Column widths (sum debe ser <= usableWidth)
+    const colWidths = {
+      nombre: 70,
+      categoria: 40,
+      valor: 20,
+      meta: 20,
+      unidad: 20,
+      fecha: usableWidth - (70 + 40 + 20 + 20 + 20), // remainder
+    };
+
+    let y = marginTop;
+
+    // Título
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Reporte de Indicadores", marginLeft, y);
+    y += 8;
+
+    // Encabezados de columna
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    const headers = ["Indicador", "Categoría", "Valor Actual", "Meta", "Unidad", "Fecha"];
+    const cols = ["nombre", "categoria", "valor", "meta", "unidad", "fecha"] as const;
+    let x = marginLeft;
+    for (let i = 0; i < headers.length; i++) {
+      const key = cols[i];
+      const w = colWidths[key];
+      doc.text(String(headers[i]), x, y);
+      x += w;
+    }
+    y += 6;
+    doc.setFont("helvetica", "normal");
+
+    const lineHeight = 5; // mm
+
+    const ensurePageForLines = (neededLines: number) => {
+      if (y + neededLines * lineHeight + marginBottom > pageHeight) {
+        doc.addPage();
+        y = marginTop;
+        // redraw header on new page
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        let hx = marginLeft;
+        for (let i = 0; i < headers.length; i++) {
+          const key = cols[i];
+          const w = colWidths[key];
+          doc.text(String(headers[i]), hx, y);
+          hx += w;
+        }
+        y += 6;
+        doc.setFont("helvetica", "normal");
+      }
+    };
+
+    indicadores.forEach((i) => {
+      // preparar textos para cada columna y ajustar a ancho de columna
+      const nombre = String(i.nombre ?? "");
+      const categoria = String(i.categoria ?? "");
+      const valor = i.valores && i.valores[0] ? String(i.valores[0].valorActual ?? "") : "";
+      const meta = String(i.meta ?? "");
+      const unidad = String(i.unidad ?? "");
+      const fechaRaw = i.valores && i.valores[0] && i.valores[0].fecha ? new Date(i.valores[0].fecha) : null;
+      const fecha = fechaRaw ? fechaRaw.toLocaleDateString() : "";
+
+      const cellNombre = doc.splitTextToSize(nombre, colWidths.nombre - 2);
+      const cellCategoria = doc.splitTextToSize(categoria, colWidths.categoria - 2);
+      const cellValor = doc.splitTextToSize(valor, colWidths.valor - 2);
+      const cellMeta = doc.splitTextToSize(meta, colWidths.meta - 2);
+      const cellUnidad = doc.splitTextToSize(unidad, colWidths.unidad - 2);
+      const cellFecha = doc.splitTextToSize(fecha, colWidths.fecha - 2);
+
+      const maxLines = Math.max(cellNombre.length, cellCategoria.length, cellValor.length, cellMeta.length, cellUnidad.length, cellFecha.length);
+
+      ensurePageForLines(maxLines);
+
+      // dibujar cada línea de la fila
+      for (let ln = 0; ln < maxLines; ln++) {
+        let cx = marginLeft;
+        const parts = [cellNombre, cellCategoria, cellValor, cellMeta, cellUnidad, cellFecha];
+        for (let c = 0; c < parts.length; c++) {
+          const textArr = parts[c];
+          const text = textArr[ln] ?? "";
+          doc.text(text, cx, y + ln * lineHeight);
+          cx += colWidths[cols[c]];
+        }
+      }
+
+      y += maxLines * lineHeight + 2; // espacio entre filas
     });
+
     doc.save("estadisticas.pdf");
   };
 
